@@ -16,7 +16,7 @@ An AI-powered systems engineering co-pilot for the Automotive Industry.
 
 1. **Clone the repository:**
    ```
-   git clone https://github.com/ranjitj86/WHALE_System_AI_Agents
+   git clone https://github.com/yourusername/your-repo.git
    cd your-repo
    ```
 
