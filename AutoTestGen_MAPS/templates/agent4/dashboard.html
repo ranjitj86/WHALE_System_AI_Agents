@@ -1,0 +1,418 @@
+{% extends "base.html" %}
+
+{% block title %}Agent 4 - Test Case Generator{% endblock %}
+
+{% block content %}
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+  <div class="d-flex align-items-center w-100">
+    <a class="navbar-brand me-0" href="/">[WHALE-RE]: Home</a>
+    <div class="navbar-nav d-flex flex-row ms-0">
+      <a class="nav-link px-2 {% if request.path == '/agent/1' %}active{% endif %}" href="/agent/1">SYS.1 Elicitation</a>
+      <a class="nav-link px-2 {% if request.path == '/agent/2' %}active{% endif %}" href="/agent/2">SYS.2 Analysis</a>
+      <a class="nav-link px-2 {% if request.path == '/agent/3' %}active{% endif %}" href="/agent/3">SYS.2 Review</a>
+      <a class="nav-link px-2 {% if request.path == '/agent/4' %}active{% endif %}" href="/agent/4">SYS.5 Testcase Generation</a>
+    </div>
+    <div class="form-check form-switch ms-auto">
+      <input class="form-check-input" type="checkbox" id="darkModeToggle">
+      <label class="form-check-label text-light" for="darkModeToggle">Dark Mode</label>
+    </div>
+  </div>
+</nav>
+<div class="container-fluid py-4">
+    <h2 class="mb-4">Agent 4 - SYS.5 Test Cases</h2>
+    <!-- SYS.2 Requirements Section -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <h5 class="card-title">SYS.2 Requirements</h5>
+            <p class="card-text text-muted">SYS.2 requirements will be loaded from <code>sys2_requirements_reviewed.xlsx</code> (AutoTestGen_MAPS/Inputs) or via manual upload below.</p>
+        </div>
+    </div>
+    <!-- Process SYS.2 Requirements Section -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">Process SYS.2 Requirements</h5>
+                <div>
+                    <button class="btn btn-primary me-2" id="autoLoadBtn">
+                        <i class="fas fa-sync"></i> Process Automatic File
+                    </button>
+                    <button class="btn btn-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#manualInputFormCollapse" aria-expanded="false" aria-controls="manualInputFormCollapse">
+                        <i class="fas fa-keyboard"></i> Manual Input (Upload)
+                    </button>
+                </div>
+            </div>
+            <div class="collapse mt-3" id="manualInputFormCollapse">
+                <form id="uploadForm" class="mb-3" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label for="sys2File" class="form-label">Upload SYS.2 Requirements File</label>
+                        <input type="file" class="form-control" id="sys2File" name="file" accept=".xlsx">
+                    </div>
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-upload"></i> Upload & Generate
+                    </button>
+                </form>
+            </div>
+            <div id="statusMsg" class="mt-2"></div>
+        </div>
+    </div>
+    <!-- Export Options Section -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center">
+                <div class="d-flex align-items-center">
+                    <h5 class="card-title mb-0 me-3">Export Options</h5>
+                    <div>
+                        <button class="btn btn-outline-secondary btn-sm">TXT</button>
+                        <button class="btn btn-outline-secondary btn-sm">DOCX</button>
+                        <button class="btn btn-outline-secondary btn-sm">XLSX</button>
+                        <button class="btn btn-outline-secondary btn-sm">CSV</button>
+                        <button class="btn btn-outline-secondary btn-sm">PDF</button>
+                    </div>
+                </div>
+                <button id="goToTraceabilityBtn" class="btn btn-outline-secondary">Go to Traceability Dashboard</button>
+            </div>
+        </div>
+    </div>
+    <!-- Processing Status and Progress Bar -->
+    <div id="processingStatusAgent4" class="alert alert-info d-none">Processing automatic SYS.2 file...</div>
+    <div class="progress mt-2 d-none" id="processingProgressBarAgent4">
+      <div class="progress-bar progress-bar-striped progress-bar-animated bg-primary" style="width: 100%"></div>
+    </div>
+    <!-- End Processing Status and Progress Bar -->
+    <!-- Test Cases Table Section -->
+    <div class="card">
+        <div class="card-body">
+            <h5 class="card-title mb-3">Generated SYS.5 Test Cases</h5>
+            <div class="table-responsive">
+                <table class="table table-bordered align-middle" id="testCasesTable">
+                    <thead>
+                        <tr>
+                            <th>SYS.2 Req. ID</th>
+                            <th>SYS.2 System Requirement</th>
+                            <th>Test Case ID</th>
+                            <th>Description</th>
+                            <th>Preconditions</th>
+                            <th>Test Steps</th>
+                            <th>Expected Results</th>
+                            <th>Pass/Fail Criteria</th>
+                            <th>Priority</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <!-- Traceability and Status Dashboard Section -->
+    <div id="traceabilityDashboard" class="mt-5">
+        <div class="card mb-4">
+            <div class="card-body">
+                <h4 class="card-title text-center mb-4">Traceability and Status Dashboard</h4>
+                <div class="d-flex flex-column align-items-center">
+                    <div id="sys2PieLegend" class="mb-2"></div>
+                    <div class="row justify-content-center w-100">
+                        <div class="col-lg-4 col-md-6 col-12 d-flex flex-column align-items-center">
+                            <h6 class="mb-2">SYS.2 Req. ID Coverage</h6>
+                            <canvas id="sys2PieChart" style="max-width:320px;"></canvas>
+                            <div class="mt-2"><small id="totalSys2ReqsText"></small></div>
+                        </div>
+                        <div class="col-lg-4 col-md-6 col-12 d-flex flex-column align-items-center">
+                            <h6 class="mb-2">Test Case ID Distribution</h6>
+                            <canvas id="testCasePieChart" style="max-width:320px;"></canvas>
+                            <div class="mt-2"><small id="totalTestCasesText"></small></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Traceability Table Section -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <h5 class="card-title mb-3">Traceability (SYS.2 to SYS.5)</h5>
+                <div class="d-flex justify-content-center">
+                    <div class="table-responsive" style="max-width: 600px; width: 100%;">
+                        <table class="table table-bordered table-striped align-middle mb-0" id="traceabilityTable">
+                            <thead>
+                                <tr>
+                                    <th>SYS.2 Req. ID</th>
+                                    <th>Test Case ID</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// Dark Mode Toggle Logic
+const darkModeToggle = document.getElementById('darkModeToggle');
+const body = document.body;
+const statusMsg = document.getElementById('statusMsg');
+const testCasesTable = document.getElementById('testCasesTable').getElementsByTagName('tbody')[0];
+
+// Load saved preference
+const savedMode = localStorage.getItem('darkMode');
+if (savedMode) {
+    body.classList.toggle('dark-mode', savedMode === 'enabled');
+    if (savedMode === 'enabled') {
+        darkModeToggle.checked = true;
+    }
+}
+
+darkModeToggle.addEventListener('change', function() {
+    if (this.checked) {
+        body.classList.add('dark-mode');
+        localStorage.setItem('darkMode', 'enabled');
+    } else {
+        body.classList.remove('dark-mode');
+        localStorage.setItem('darkMode', 'disabled');
+    }
+});
+
+function renderTestCases(testCases) {
+    testCasesTable.innerHTML = '';
+    if (!testCases || testCases.length === 0) {
+        testCasesTable.innerHTML = '<tr><td colspan="9" class="text-center">No test cases generated yet.</td></tr>';
+        return;
+    }
+    testCases.forEach(tc => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${tc['SYS.2 Req. ID'] || ''}</td>
+            <td>${tc['SYS.2 System Requirement'] || ''}</td>
+            <td>${tc['Test Case ID'] || ''}</td>
+            <td>${tc['Description'] || ''}</td>
+            <td>${tc['Preconditions'] || ''}</td>
+            <td>${(tc['Test Steps'] || '').replace(/\n/g, '<br>')}</td>
+            <td>${(tc['Expected Results'] || '').replace(/\n/g, '<br>')}</td>
+            <td>${tc['Pass/Fail Criteria'] || ''}</td>
+            <td>${tc['Priority'] || ''}</td>
+        `;
+        testCasesTable.appendChild(row);
+    });
+    updateTraceabilityCharts();
+}
+
+function fetchTestCases() {
+    fetch('/api/agent4/test_cases')
+        .then(res => res.json())
+        .then(data => {
+            if (data.status === 'success') {
+                renderTestCases(data.test_cases);
+            } else {
+                statusMsg.textContent = data.message || 'No test cases found.';
+            }
+        });
+}
+
+document.getElementById('autoLoadBtn').addEventListener('click', function() {
+    statusMsg.textContent = 'Loading and generating test cases...';
+    fetch('/api/agent4/load_sys2')
+        .then(res => res.json())
+        .then(data => {
+            if (data.status === 'success') {
+                statusMsg.textContent = 'Test cases generated from default file.';
+                renderTestCases(data.test_cases);
+            } else {
+                statusMsg.textContent = data.message || 'Failed to load file.';
+            }
+        });
+});
+
+document.getElementById('uploadForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const fileInput = document.getElementById('sys2File');
+    if (!fileInput.files.length) {
+        statusMsg.textContent = 'Please select a file to upload.';
+        return;
+    }
+    const formData = new FormData();
+    formData.append('file', fileInput.files[0]);
+    statusMsg.textContent = 'Uploading and generating test cases...';
+    fetch('/api/agent4/upload_sys2', {
+        method: 'POST',
+        body: formData
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.status === 'success') {
+            statusMsg.textContent = 'Test cases generated from uploaded file.';
+            renderTestCases(data.test_cases);
+        } else {
+            statusMsg.textContent = data.message || 'Failed to process file.';
+        }
+    });
+});
+
+// Smooth scroll to traceability dashboard
+const goToTraceabilityBtn = document.getElementById('goToTraceabilityBtn');
+goToTraceabilityBtn.addEventListener('click', function(e) {
+    e.preventDefault();
+    document.getElementById('traceabilityDashboard').scrollIntoView({ behavior: 'smooth' });
+});
+
+// Chart.js pie chart rendering for traceability
+let sys2PieChart, testCasePieChart;
+function renderTraceabilityCharts(testCases) {
+    // SYS.2 Req. ID coverage: count how many test cases per SYS.2 Req. ID
+    const sys2Counts = {};
+    testCases.forEach(tc => {
+        const sys2id = tc['SYS.2 Req. ID'] || 'Unknown';
+        sys2Counts[sys2id] = (sys2Counts[sys2id] || 0) + 1;
+    });
+    const sys2Labels = Object.keys(sys2Counts);
+    const sys2Data = Object.values(sys2Counts);
+    document.getElementById('totalSys2ReqsText').textContent = `Total SYS.2 Requirements: ${sys2Labels.length}`;
+
+    // Test Case ID distribution: just show all Test Case IDs (could be 1:1, but for completeness)
+    const testCaseLabels = testCases.map(tc => tc['Test Case ID'] || '');
+    const testCaseData = testCaseLabels.map(() => 1); // Each test case is one
+    document.getElementById('totalTestCasesText').textContent = `Total Test Cases: ${testCaseLabels.length}`;
+
+    // Destroy previous charts if they exist
+    if (sys2PieChart) sys2PieChart.destroy();
+    if (testCasePieChart) testCasePieChart.destroy();
+
+    const sys2Ctx = document.getElementById('sys2PieChart').getContext('2d');
+    const testCaseCtx = document.getElementById('testCasePieChart').getContext('2d');
+
+    sys2PieChart = new Chart(sys2Ctx, {
+        type: 'pie',
+        data: {
+            labels: sys2Labels,
+            datasets: [{
+                data: sys2Data,
+                backgroundColor: sys2Labels.map((_, i) => `hsl(${i * 360 / sys2Labels.length}, 70%, 60%)`),
+            }]
+        },
+        options: {
+            plugins: {
+                legend: {
+                    labels: {
+                        color: document.body.classList.contains('dark-mode') ? '#f8f9fa' : '#212529'
+                    }
+                }
+            }
+        }
+    });
+    testCasePieChart = new Chart(testCaseCtx, {
+        type: 'pie',
+        data: {
+            labels: testCaseLabels,
+            datasets: [{
+                data: testCaseData,
+                backgroundColor: testCaseLabels.map((_, i) => `hsl(${i * 360 / testCaseLabels.length}, 70%, 60%)`),
+            }]
+        },
+        options: {
+            plugins: {
+                legend: {
+                    display: false
+                }
+            }
+        }
+    });
+
+    // Populate traceability table
+    const tbody = document.querySelector('#traceabilityTable tbody');
+    tbody.innerHTML = '';
+    testCases.forEach(tc => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${tc['SYS.2 Req. ID'] || ''}</td>
+            <td>${tc['Test Case ID'] || ''}</td>
+        `;
+        tbody.appendChild(row);
+    });
+}
+
+// Update charts on page load and when test cases are generated
+function updateTraceabilityCharts() {
+    fetch('/api/agent4/test_cases')
+        .then(res => res.json())
+        .then(data => {
+            if (data.status === 'success') {
+                renderTraceabilityCharts(data.test_cases);
+            }
+        });
+}
+document.addEventListener('DOMContentLoaded', updateTraceabilityCharts);
+
+// Update chart colors on dark mode toggle
+function updateChartColors() {
+    if (sys2PieChart) {
+        sys2PieChart.options.plugins.legend.labels.color = document.body.classList.contains('dark-mode') ? '#f8f9fa' : '#212529';
+        sys2PieChart.update();
+    }
+}
+darkModeToggle.addEventListener('change', updateChartColors);
+</script>
+{% endblock %}
+
+{% block extra_head %}
+<style>
+.card {
+    margin-bottom: 20px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+.table-responsive {
+    margin-top: 20px;
+}
+body.dark-mode {
+    background-color: #343a40;
+    color: #f8f9fa;
+}
+body.dark-mode .card {
+    background-color: #454d55;
+    color: #f8f9fa;
+    border-color: #6c757d;
+}
+body.dark-mode .card-title {
+    color: #f8f9fa;
+}
+body.dark-mode .text-muted {
+    color: #ced4da !important;
+}
+body.dark-mode .table {
+    color: #f8f9fa;
+    background-color: #343a40;
+}
+body.dark-mode .table-bordered {
+    border-color: #6c757d;
+}
+body.dark-mode .btn-primary, body.dark-mode .btn-success, body.dark-mode .btn-secondary, body.dark-mode .btn-outline-secondary {
+    color: #fff;
+}
+.navbar .nav-link.active {
+    font-weight: bold;
+    color: #ffffff !important;
+    background-color: #0d6efd !important;
+}
+body.dark-mode .navbar .nav-link.active {
+    color: #ffffff !important;
+    background-color: #0d6efd !important;
+}
+#traceabilityDashboard .card-body {
+    padding-top: 2rem;
+    padding-bottom: 2rem;
+}
+#traceabilityDashboard .row {
+    margin-left: 0;
+    margin-right: 0;
+}
+#traceabilityDashboard .col-lg-4 {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+#traceabilityTable {
+    margin-left: auto;
+    margin-right: auto;
+}
+body { padding-top: 70px; }
+</style>
+{% endblock %} 

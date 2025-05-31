@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multi-Agent Requirement Engineering System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
+    <style>
+        .agent-card {
+            transition: transform 0.3s cubic-bezier(.4,2,.6,1), box-shadow 0.3s cubic-bezier(.4,2,.6,1);
+            cursor: pointer;
+            border: none;
+            min-height: 140px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            height: 100%;
+            width: 350px;
+            max-width: 100%;
+        }
+        .agent-card:hover {
+            transform: translateY(-10px) scale(1.04) rotate(-1deg);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+            z-index: 2;
+            border: 2px solid #00aaff;
+            box-shadow: 0 0 16px #00aaff, 0 8px 32px rgba(0,0,0,0.18);
+        }
+        .agent-1 {
+            background: #e3f2fd;
+            border-left: 6px solid #1976d2;
+        }
+        .agent-2 {
+            background: #e8f5e9;
+            border-left: 6px solid #388e3c;
+        }
+        .agent-3 {
+            background: #fff3e0;
+            border-left: 6px solid #f57c00;
+        }
+        .agent-4 {
+            background: #fce4ec;
+            border-left: 6px solid #c2185b;
+        }
+        /* Dark mode styles */
+        body.dark-mode {
+            background-color: #343a40; /* Dark background */
+            color: #f8f9fa; /* Light text */
+        }
+        body.dark-mode .card {
+            background-color: #454d55; /* Slightly lighter dark for cards */
+            color: #f8f9fa; /* Light text for cards */
+            border-color: #6c757d; /* Subtle border */
+        }
+        body.dark-mode .card-title {
+            color: #f8f9fa; /* Ensure card titles are light */
+        }
+        body.dark-mode .list-group-item {
+             background-color: #454d55; /* Match card background */
+             color: #f8f9fa; /* Light text */
+             border-color: #6c757d; /* Subtle border */
+        }
+        body.dark-mode .navbar {
+             background-color: #212529 !important; /* Even darker navbar */
+        }
+         body.dark-mode .navbar-brand, body.dark-mode .nav-link {
+             color: #f8f9fa !important; /* Light text for navbar items */
+        }
+        body.dark-mode .subtitle {
+            color: #ced4da !important; /* Lighter gray for subtitle in dark mode */
+        }
+        /* Floating Help Button styles */
+        .floating-help-button {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 60px; /* Increase size */
+            height: 60px; /* Increase size */
+            font-size: 24px; /* Increase font size */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 0; /* Remove padding to center the icon */
+            z-index: 1050; /* Ensure it's above most elements */
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            transition: background-color 0.3s ease;
+        }
+
+        .floating-help-button:hover {
+            background-color: #0b5ed7; /* Darker shade on hover */
+        }
+
+        /* Optional: Dark mode adjustments for the button if needed */
+        body.dark-mode .floating-help-button {
+            background-color: #0d6efd; /* Match dark mode primary button */
+            color: #fff;
+        }
+         body.dark-mode .floating-help-button:hover {
+            background-color: #0b5ed7; /* Darker shade on hover in dark mode */
+        }
+        /* Modal Title Color */
+        .modal-title {
+            color: #0d6efd; /* Bootstrap primary blue */
+        }
+        body.dark-mode .modal-title {
+            color: #ffffff; /* White color for modal title in dark mode */
+        }
+        /* Dark mode styles for modals */
+        body.dark-mode .modal-content {
+            background-color: #454d55; /* Dark background for modal content */
+            color: #f8f9fa; /* Light text for modal */
+        }
+        body.dark-mode .modal-body {
+            color: #f8f9fa; /* Ensure text in modal body is light */
+        }
+         body.dark-mode .modal-body a {
+             color: #bbdaff; /* Lighter blue for links in dark mode modal */
+         }
+        body.dark-mode .modal-header, body.dark-mode .modal-footer {
+            border-color: #6c757d; /* Subtle border for modal parts */
+        }
+         body.dark-mode .modal-body strong {
+             color: #f8f9fa; /* Ensure strong text is light */
+         }
+        /* Dark mode specific styles for Agent 1 Dashboard */
+        /* Add any specific styles for Agent 1 content here if needed */
+
+        /* Styles for Agent Card Indicators */
+         .agent-indicator.bg-warning { background-color: #ffc107; }
+         .agent-indicator.bg-danger { background-color: #dc3545; }
+
+        /* Styles for Active Navbar Link */
+        .navbar .nav-link.active {
+            font-weight: bold;
+            color: #ffffff; /* White text for active link in light mode */
+        }
+
+        /* Dark mode adjustments for active navbar link */
+        body.dark-mode .navbar .nav-link.active {
+            color: #17a2b8 !important; /* Info blue for active link in dark mode */
+        }
+
+        /* Styles for Tooltip text color in dark mode */
+        body.dark-mode .tooltip-inner {
+            background-color: #454d55;
+            color: #f8f9fa;
+        }
+        body { padding-top: 70px; }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+        <div class="d-flex align-items-center w-100">
+            <a class="navbar-brand me-0" href="/">[WHALE-RE]: Home</a>
+            <div class="navbar-nav d-flex flex-row ms-0">
+                <a class="nav-link px-2 {% if request.path == '/agent/1' %}active{% endif %}" href="/agent/1">SYS.1 Elicitation</a>
+                <a class="nav-link px-2 {% if request.path == '/agent/2' %}active{% endif %}" href="/agent/2">SYS.2 Analysis</a>
+                <a class="nav-link px-2 {% if request.path == '/agent/3' %}active{% endif %}" href="/agent/3">SYS.2 Review</a>
+                <a class="nav-link px-2 {% if request.path == '/agent/4' %}active{% endif %}" href="/agent/4">SYS.5 Testcase Generation</a>
+            </div>
+            <div class="form-check form-switch ms-auto">
+                <input class="form-check-input" type="checkbox" id="darkModeToggle">
+                <label class="form-check-label text-light" for="darkModeToggle">Dark Mode</label>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-5">
+        <div class="text-center mt-5 mb-3">
+            <div style="font-family:'Orbitron',sans-serif;font-size:4rem;font-weight:700;letter-spacing:0.08em;color:#222;">WHALE</div>
+            <div style="font-family:'Orbitron',sans-serif;font-size:1.1rem;color:#6c757d;margin-top:-0.5rem;">"We have to look into Everything"</div>
+            <div style="font-size:1.2rem;font-weight:500;margin-top:0.5rem;color:#00aaff;text-shadow:0 0 8px #00aaff, 0 0 16px #00aaff;">An AI-powered systems engineering co-pilot for the Automotive Industry</div>
+        </div>
+        
+        <div class="row justify-content-center equal-height">
+            <!-- Agent 1 Card -->
+            <div class="col-md-6 mb-4 d-flex">
+                <div class="card agent-card agent-1 w-100" onclick="window.location.href='/agent/1'" data-bs-toggle="tooltip" data-bs-placement="top" title="Key Features: Document Upload, Text Input, Initial Drafting, Requirement Padding.">
+                    <div class="card-body" style="position: relative;">
+                        <div class="front-content">
+                            <h5 class="card-title" style="font-family:'Orbitron',sans-serif;">SYS.1 Elicitation
+                                <!-- Consistent outline icon: Magnifying Glass (Heroicons outline) -->
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="#1976d2" stroke-width="2" style="width: 1.5em; height: 1.5em; vertical-align: middle; margin-left: 0.5em;">
+                                    <circle cx="11" cy="11" r="7" />
+                                    <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                                </svg>
+                            </h5>
+                            <p class="card-text">Requirement elicitation, pre-processing, and SYS.1 drafting</p>
+                            <p class="card-text">Status: {{ agent1_status }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Agent 2 Card -->
+            <div class="col-md-6 mb-4 d-flex">
+                <div class="card agent-card agent-2 w-100" onclick="window.location.href='/agent/2'" data-bs-toggle="tooltip" data-bs-placement="top" title="Key Features: Draft generation, structuring, dependency analysis (Placeholder).">
+                    <div class="card-body" style="position: relative;">
+                         <div class="front-content">
+                            <h5 class="card-title" style="font-family:'Orbitron',sans-serif;">SYS.2 Analysis
+                                <!-- Consistent outline icon: Pencil (Heroicons outline) -->
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="#388e3c" stroke-width="2" style="width: 1.5em; height: 1.5em; vertical-align: middle; margin-left: 0.5em;">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 3.487a2.25 2.25 0 113.182 3.182L7.5 19.213l-4 1 1-4L16.862 3.487z" />
+                                </svg>
+                            </h5>
+                            <p class="card-text">SYS.2 requirement drafting and structuring</p>
+                            <p class="card-text">Status: {{ agent2_status }}</p>
+                         </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Agent 3 Card -->
+            <div class="col-md-6 mb-4 d-flex">
+                <div class="card agent-card agent-3 w-100" onclick="window.location.href='/agent/3'" data-bs-toggle="tooltip" data-bs-placement="top" title="Key Features: Compliance checks, suggestion generation, status updates.">
+                    <div class="card-body" style="position: relative;">
+                         <div class="front-content">
+                            <h5 class="card-title" style="font-family:'Orbitron',sans-serif;">SYS.2 Review
+                                <!-- Consistent outline icon: Bell (Heroicons outline) -->
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="#f57c00" stroke-width="2" style="width: 1.5em; height: 1.5em; vertical-align: middle; margin-left: 0.5em;">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                                </svg>
+                            </h5>
+                            <p class="card-text">SYS.2 review, compliance with IREB, ISO/IEC/IEEE 29148:2018 / ISO 26262 / INCOSE SE guidelines _continuous learning</p>
+                            <p class="card-text">Status: {{ agent3_status }}</p>
+                         </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Agent 4 Card -->
+            <div class="col-md-6 mb-4 d-flex">
+                <div class="card agent-card agent-4 w-100" onclick="window.location.href='/agent/4'" data-bs-toggle="tooltip" data-bs-placement="top" title="Key Features: Test case generation, traceability matrix, maturity tracking.">
+                    <div class="card-body" style="position: relative;">
+                        <div class="front-content">
+                             <h5 class="card-title" style="font-family:'Orbitron',sans-serif;">
+                                SYS.5 Testcase Generation
+                                <!-- Consistent outline icon: Document Check (Heroicons outline) -->
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="#c2185b" stroke-width="2" style="width: 1.5em; height: 1.5em; vertical-align: middle; margin-left: 0.5em;">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2l4-4m2 2v6a2 2 0 01-2 2H7a2 2 0 01-2-2V7a2 2 0 012-2h6" />
+                                </svg>
+                            </h5>
+                             <p class="card-text">SYS.2 to SYS.5 test case generation</p>
+                             <p class="card-text">Status: {{ agent4_status }}</p>
+                         </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Initialize tooltips
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+          return new bootstrap.Tooltip(tooltipTriggerEl)
+        })
+
+        // Dark Mode Toggle Logic
+        const darkModeToggle = document.getElementById('darkModeToggle');
+        const body = document.body;
+        const lightTextElements = document.querySelectorAll('.text-light'); // Select elements that should remain light in dark mode
+
+        // Load saved preference
+        const savedMode = localStorage.getItem('darkMode');
+        if (savedMode) {
+            body.classList.toggle('dark-mode', savedMode === 'enabled');
+            darkModeToggle.checked = savedMode === 'enabled';
+        }
+
+        darkModeToggle.addEventListener('change', function() {
+            if (this.checked) {
+                body.classList.add('dark-mode');
+                localStorage.setItem('darkMode', 'enabled');
+                 // Change label color to dark when switch is toggled (optional, depends on design)
+                 lightTextElements.forEach(el => el.classList.remove('text-light'));
+                 lightTextElements.forEach(el => el.classList.add('text-dark')); // Or a custom dark mode label color class
+            } else {
+                body.classList.remove('dark-mode');
+                localStorage.setItem('darkMode', 'disabled');
+                 // Change label color back to light
+                 lightTextElements.forEach(el => el.classList.remove('text-dark'));
+                 lightTextElements.forEach(el => el.classList.add('text-light'));
+            }
+        });
+
+        // Initial label color adjustment based on saved mode
+        if (body.classList.contains('dark-mode')) {
+             lightTextElements.forEach(el => el.classList.remove('text-light'));
+             lightTextElements.forEach(el => el.classList.add('text-dark')); // Or custom class
+        } else {
+             lightTextElements.forEach(el => el.classList.remove('text-dark'));
+             lightTextElements.forEach(el => el.classList.add('text-light'));
+        }
+    </script>
+
+    <script>
+        // Feedback Button Logic (Placeholder for now)
+        document.addEventListener('DOMContentLoaded', function() {
+            // REMOVED: Feedback button logic
+             // REMOVED: Submit feedback button logic
+        });
+    </script>
+
+    <!-- Floating Help Button -->
+    <button class="btn btn-primary rounded-circle floating-help-button" data-bs-toggle="modal" data-bs-target="#helpModal">
+        ❓
+    </button>
+
+    <!-- Help Modal -->
+    <div class="modal fade" id="helpModal" tabindex="-1" aria-labelledby="helpModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="helpModalLabel">MAPS Assistant: What can I do here?</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>This is the landing page for the Multi-Agent Requirement Engineering System [MAPS]. From here, you can navigate to the different AI agents to perform specific tasks:</p>
+                    <ul>
+                        <li><strong>SYS.1 Elicitation:</strong> Upload and process raw inputs to extract and draft initial requirements.</li>
+                        <li><strong>SYS.2 Analysis:</strong> Analyze and structure the drafted requirements.</li>
+                        <li><strong>SYS.2 Review:</strong> Review requirements against standards and guidelines.</li>
+                        <li><strong>SYS.5 Testcase Generation:</strong> Generate test cases based on requirements.</li>
+                    </ul>
+                    <p>Use the navigation bar or click on the agent cards above to explore each module.</p>
+                    <hr>
+                    <p>Need more detailed information?</p>
+                    <p><a href="#" target="_blank">Link to Documentation (Placeholder)</a></p>
+                    <p><a href="#" target="_blank">Link to Glossary (Placeholder)</a></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

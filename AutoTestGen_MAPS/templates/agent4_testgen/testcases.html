@@ -1,0 +1,849 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WHALE: We have to look into Everything - Analysis Results</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.datatables.net/1.10.24/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            padding: 20px;
+            background-color: #f8f9fa;
+        }
+        .container {
+            max-width: 95%;
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+        h1, h2 {
+            color: #0d6efd;
+            margin-bottom: 20px;
+        }
+        .subtitle {
+            color: #6c757d;
+            font-size: 1.2rem;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        .table-responsive {
+            margin-bottom: 30px;
+        }
+        .nav-tabs {
+            margin-bottom: 20px;
+        }
+        .download-btn {
+            margin: 20px 0;
+        }
+        .table th {
+            background-color: #f8f9fa;
+        }
+        .upload-section {
+            border: 2px dashed #dee2e6;
+            padding: 20px;
+            text-align: center;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            background-color: #f8f9fa;
+        }
+        #file-name {
+            margin-top: 10px;
+            font-style: italic;
+        }
+        .loading {
+            display: none;
+            margin-top: 20px;
+        }
+        .format-badge {
+            display: inline-block;
+            padding: 5px 10px;
+            margin: 3px;
+            background-color: #0d6efd;
+            color: white;
+            border-radius: 15px;
+            font-size: 0.9rem;
+        }
+        .chart-container {
+            width: 400px;
+            margin: 20px auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="text-center">WHALE: We have to look into Everything</h1>
+        <p class="subtitle">Analysis Results</p>
+        
+        <!-- New Upload Section -->
+        <div class="upload-section">
+            <form id="upload-form" action="/analyze" method="post" enctype="multipart/form-data">
+                <p class="mb-3">Analyze another requirements file</p>
+                <div class="row justify-content-center">
+                    <div class="col-md-6">
+                        <input type="file" class="form-control" id="file-input" name="file" 
+                               accept=".txt,.docx,.pdf" required>
+                        <div id="file-name" class="text-muted"></div>
+                    </div>
+                    <div class="col-md-auto mt-3 mt-md-0">
+                        <button type="submit" class="btn btn-primary">Analyze Requirements</button>
+                    </div>
+                </div>
+                <div class="mt-2">
+                    <span class="format-badge">.txt</span>
+                    <span class="format-badge">.docx</span>
+                    <span class="format-badge">.pdf</span>
+                </div>
+            </form>
+            <div class="loading text-center">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-2">Analyzing requirements and generating test cases...</p>
+            </div>
+        </div>
+        
+        <ul class="nav nav-tabs" id="myTab" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="dashboard-tab" data-bs-toggle="tab" data-bs-target="#dashboard" type="button" role="tab">Dashboard</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="requirements-tab" data-bs-toggle="tab" data-bs-target="#requirements" type="button" role="tab">Requirements Review</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="testcases-tab" data-bs-toggle="tab" data-bs-target="#testcases" type="button" role="tab">Test Cases</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="matrix-tab" data-bs-toggle="tab" data-bs-target="#matrix" type="button" role="tab">Traceability Matrix</button>
+            </li>
+        </ul>
+
+        <div class="tab-content" id="myTabContent">
+            <!-- Dashboard Tab -->
+            <div class="tab-pane fade show active" id="dashboard" role="tabpanel">
+                <div class="row mt-4">
+                    <!-- Coverage Overview Card -->
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="card-title mb-0">Test Coverage Overview</h5>
+                            </div>
+                            <div class="card-body">
+                                <canvas id="coverageChart" height="200"></canvas>
+                                <div class="mt-3">
+                                    <strong>Uncovered Requirements:</strong>
+                                    <ul id="uncoveredList" class="mb-0"></ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Requirements Summary Card -->
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="card-title mb-0">Requirements Summary</h5>
+                            </div>
+                            <div class="card-body">
+                                <canvas id="requirementTypesChart" height="200"></canvas>
+                                <div class="mt-3">
+                                    <strong>High Priority Requirements:</strong>
+                                    <ul id="highPriorityList" class="mb-0"></ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row mt-4">
+                    <!-- Key Metrics Card -->
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="card-title mb-0">Key Metrics</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-6">
+                                        <div class="metric-box text-center p-3">
+                                            <h3 id="totalRequirements">0</h3>
+                                            <p class="mb-0">Total Requirements</p>
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="metric-box text-center p-3">
+                                            <h3 id="totalTestCases">0</h3>
+                                            <p class="mb-0">Total Test Cases</p>
+                                        </div>
+                                    </div>
+                                    <div class="col-6 mt-3">
+                                        <div class="metric-box text-center p-3">
+                                            <h3 id="coveragePercentage">0%</h3>
+                                            <p class="mb-0">Coverage</p>
+                                        </div>
+                                    </div>
+                                    <div class="col-6 mt-3">
+                                        <div class="metric-box text-center p-3">
+                                            <h3 id="avgTestsPerReq">0</h3>
+                                            <p class="mb-0">Avg Tests/Req</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Priority Distribution Card -->
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="card-title mb-0">Priority Distribution</h5>
+                            </div>
+                            <div class="card-body">
+                                <canvas id="priorityChart" height="200"></canvas>
+                                <div class="mt-3">
+                                    <strong>Summary:</strong>
+                                    <ul id="dashboardSummary" class="mb-0"></ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <style>
+                    .metric-box {
+                        background-color: #f8f9fa;
+                        border-radius: 8px;
+                        border: 1px solid #dee2e6;
+                    }
+                    .metric-box h3 {
+                        color: #0d6efd;
+                        font-weight: bold;
+                        margin-bottom: 5px;
+                    }
+                    .card {
+                        box-shadow: 0 0.125rem 0.25rem rgba(0,0,0,0.075);
+                        margin-bottom: 1rem;
+                    }
+                    .card-header {
+                        background-color: #f8f9fa;
+                        border-bottom: 1px solid #dee2e6;
+                    }
+                </style>
+            </div>
+
+            <!-- Requirements Review Table -->
+            <div class="tab-pane fade" id="requirements" role="tabpanel">
+                <div class="table-responsive">
+                    <table class="table table-striped table-bordered" id="requirementsTable">
+                        <thead>
+                            <tr>
+                                <th>Requirement ID</th>
+                                <th>Requirement Text</th>
+                                <th>Type</th>
+                                <th>Priority</th>
+                                <th>Clarity Score</th>
+                                <th>Is Unambiguous</th>
+                                <th>Completeness Score</th>
+                                <th>Is Testable</th>
+                                <th>Feedback</th>
+                                <th>IREB Improvements</th>
+                                <th>Verification Criteria</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for req in requirements %}
+                            <tr>
+                                <td>{{ req.requirement_id }}</td>
+                                <td>{{ req.requirement_text }}</td>
+                                <td>{{ req.type }}</td>
+                                <td>{{ req.priority }}</td>
+                                <td>{{ "%.2f"|format(req.clarity_score) }}</td>
+                                <td>{{ "Yes" if req.is_unambiguous else "No" }}</td>
+                                <td>{{ "%.2f"|format(req.completeness_score) }}</td>
+                                <td>{{ "Yes" if req.is_testable else "No" }}</td>
+                                <td>{{ req.feedback }}</td>
+                                <td>
+                                    {% if req.improvements %}
+                                        <ul class="list-unstyled mb-0">
+                                        {% for improvement in req.improvements %}
+                                            <li>• {{ improvement }}</li>
+                                        {% endfor %}
+                                        </ul>
+                                    {% endif %}
+                                </td>
+                                <td>{{ req.verification_criteria if req.verification_criteria else '' }}</td>
+                                <td>
+                                    <button class="btn btn-primary btn-sm edit-requirement" 
+                                            data-requirement-id="{{ req.requirement_id }}"
+                                            data-requirement-text="{{ req.requirement_text }}"
+                                            data-type="{{ req.type }}"
+                                            data-priority="{{ req.priority }}"
+                                            data-feedback="{{ req.feedback }}"
+                                            data-improvements='{{ req.improvements|tojson }}'
+                                            data-verification-criteria="{{ req.verification_criteria if req.verification_criteria else '' }}">
+                                        Edit
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Edit Requirement Modal -->
+            <div class="modal fade" id="editRequirementModal" tabindex="-1" aria-labelledby="editRequirementModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="editRequirementModalLabel">Edit Requirement</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <form id="editRequirementForm">
+                                <input type="hidden" id="editRequirementId" name="requirement_id">
+                                <div class="mb-3">
+                                    <label for="editRequirementText" class="form-label">Requirement Text</label>
+                                    <textarea class="form-control" id="editRequirementText" name="requirement_text" rows="3"></textarea>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="editType" class="form-label">Type</label>
+                                    <input type="text" class="form-control" id="editType" name="type" readonly>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="editPriority" class="form-label">Priority</label>
+                                    <select class="form-control" id="editPriority" name="priority">
+                                        <option value="High">High</option>
+                                        <option value="Medium">Medium</option>
+                                        <option value="Low">Low</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Feedback</label>
+                                    <div id="editFeedback" class="alert alert-info"></div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">IREB Improvements</label>
+                                    <div id="editImprovements"></div>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="editVerificationCriteria" class="form-label">Verification Criteria <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="editVerificationCriteria" name="verification_criteria" required>
+                                    <div class="invalid-feedback">Verification criteria is required.</div>
+                                </div>
+                            </form>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="button" class="btn btn-primary" id="saveRequirement">Save Changes</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Test Cases Table -->
+            <div class="tab-pane fade" id="testcases" role="tabpanel">
+                <div class="table-responsive">
+                    <table class="table table-striped table-bordered" id="testcasesTable">
+                        <thead>
+                            <tr>
+                                <th>Test Case ID</th>
+                                <th>Requirement ID</th>
+                                <th>Description</th>
+                                <th>Preconditions</th>
+                                <th>Test Steps</th>
+                                <th>Expected Results</th>
+                                <th>Priority</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for tc in test_cases %}
+                            <tr>
+                                <td>{{ tc.test_case_id }}</td>
+                                <td>{{ tc.requirement_id }}</td>
+                                <td>{{ tc.description }}</td>
+                                <td>{{ tc.preconditions }}</td>
+                                <td>{{ tc.test_steps }}</td>
+                                <td>{{ tc.expected_results }}</td>
+                                <td>{{ tc.priority }}</td>
+                                <td>
+                                    <button class="btn btn-primary btn-sm edit-test-case" 
+                                            data-test-case-id="{{ tc.test_case_id }}"
+                                            data-requirement-id="{{ tc.requirement_id }}"
+                                            data-description="{{ tc.description }}"
+                                            data-preconditions="{{ tc.preconditions }}"
+                                            data-test-steps="{{ tc.test_steps }}"
+                                            data-expected-results="{{ tc.expected_results }}"
+                                            data-priority="{{ tc.priority }}">
+                                        Edit
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Edit Test Case Modal -->
+            <div class="modal fade" id="editTestCaseModal" tabindex="-1" aria-labelledby="editTestCaseModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="editTestCaseModalLabel">Edit Test Case</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <form id="editTestCaseForm">
+                                <input type="hidden" id="editTestCaseId" name="test_case_id">
+                                <input type="hidden" id="editRequirementId" name="requirement_id">
+                                
+                                <div class="mb-3">
+                                    <label for="editDescription" class="form-label">Description</label>
+                                    <input type="text" class="form-control" id="editDescription" name="description">
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="editPreconditions" class="form-label">Preconditions</label>
+                                    <textarea class="form-control" id="editPreconditions" name="preconditions" rows="5"></textarea>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="editTestSteps" class="form-label">Test Steps</label>
+                                    <textarea class="form-control" id="editTestSteps" name="test_steps" rows="5"></textarea>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="editExpectedResults" class="form-label">Expected Results</label>
+                                    <textarea class="form-control" id="editExpectedResults" name="expected_results" rows="5"></textarea>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="editPriority" class="form-label">Priority</label>
+                                    <select class="form-control" id="editPriority" name="priority">
+                                        <option value="High">High</option>
+                                        <option value="Medium">Medium</option>
+                                        <option value="Low">Low</option>
+                                    </select>
+                                </div>
+                            </form>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="button" class="btn btn-primary" id="saveTestCase">Save Changes</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Traceability Matrix Table -->
+            <div class="tab-pane fade" id="matrix" role="tabpanel">
+                <!-- Add Chart Container -->
+                <div class="chart-container">
+                    <h4 class="text-center mb-4">Test Coverage Analysis</h4>
+                    <canvas id="coverageChart"></canvas>
+                </div>
+                
+                <div class="table-responsive">
+                    <table class="table table-striped table-bordered" id="matrixTable">
+                        <thead>
+                            <tr>
+                                <th>Requirement ID</th>
+                                <th>Test Case ID</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in traceability %}
+                            <tr>
+                                <td>{{ item.requirement_id }}</td>
+                                <td>{{ item.test_case_id }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- New Output Format Section -->
+        <div class="text-center download-btn">
+            <div class="row justify-content-center align-items-center">
+                <div class="col-md-4">
+                    <div class="input-group">
+                        <label class="input-group-text" for="outputFormat">Output Format:</label>
+                        <select class="form-select" id="outputFormat">
+                            <option value="browser" selected>View in Browser</option>
+                            <option value="xlsx">Excel (XLSX)</option>
+                            <option value="csv">CSV</option>
+                            <option value="docx">Word (DOCX)</option>
+                            <option value="pdf">PDF</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-auto mt-3 mt-md-0">
+                    <button id="downloadBtn" class="btn btn-primary">Download Report</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.datatables.net/1.10.24/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.10.24/js/dataTables.bootstrap5.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            // Initialize DataTables
+            $('#requirementsTable').DataTable({
+                pageLength: 10,
+                order: [[0, 'asc']]
+            });
+            
+            $('#testcasesTable').DataTable({
+                pageLength: 10,
+                order: [[0, 'asc']]
+            });
+            
+            $('#matrixTable').DataTable({
+                pageLength: 10,
+                order: [[0, 'asc']]
+            });
+
+            function renderDashboardCharts() {
+                // Calculate metrics for dashboard
+                const requirementIds = new Set();
+                const coveredRequirementIds = new Set();
+                const requirementTypes = {};
+                const priorityDistribution = {
+                    'High': 0,
+                    'Medium': 0,
+                    'Low': 0
+                };
+                const highPriorityReqs = [];
+                const uncoveredReqs = [];
+                const reqIdToText = {};
+
+                // Get all requirement IDs and types
+                $('#requirementsTable tbody tr').each(function() {
+                    const reqId = $(this).find('td:first').text().trim();
+                    const reqType = $(this).find('td:eq(2)').text().trim();
+                    const priority = $(this).find('td:eq(3)').text().trim();
+                    const reqText = $(this).find('td:eq(1)').text().trim();
+                    requirementIds.add(reqId);
+                    reqIdToText[reqId] = reqText;
+                    requirementTypes[reqType] = (requirementTypes[reqType] || 0) + 1;
+                    priorityDistribution[priority]++;
+                    if (priority === 'High') highPriorityReqs.push(reqId + ': ' + reqText);
+                });
+
+                // Get covered requirement IDs from test cases
+                $('#testcasesTable tbody tr').each(function() {
+                    const reqId = $(this).find('td:eq(1)').text().trim();
+                    if (requirementIds.has(reqId)) {
+                        coveredRequirementIds.add(reqId);
+                    }
+                });
+
+                // Find uncovered requirements
+                requirementIds.forEach(function(reqId) {
+                    if (!coveredRequirementIds.has(reqId)) {
+                        uncoveredReqs.push(reqId + ': ' + reqIdToText[reqId]);
+                    }
+                });
+
+                // Calculate metrics
+                const totalReqs = requirementIds.size;
+                const totalTests = $('#testcasesTable tbody tr').length;
+                const coveredReqs = coveredRequirementIds.size;
+                const coverage = totalReqs > 0 ? (coveredReqs / totalReqs * 100).toFixed(1) : 0;
+                const avgTests = totalReqs > 0 ? (totalTests / totalReqs).toFixed(1) : 0;
+
+                // Update metrics display
+                $('#totalRequirements').text(totalReqs);
+                $('#totalTestCases').text(totalTests);
+                $('#coveragePercentage').text(coverage + '%');
+                $('#avgTestsPerReq').text(avgTests);
+
+                // Update uncovered requirements list
+                const $uncoveredList = $('#uncoveredList').empty();
+                if (uncoveredReqs.length === 0) {
+                    $uncoveredList.append('<li>All requirements are covered by test cases.</li>');
+                } else {
+                    uncoveredReqs.forEach(function(item) {
+                        $uncoveredList.append('<li>' + item + '</li>');
+                    });
+                }
+
+                // Update high priority requirements list
+                const $highPriorityList = $('#highPriorityList').empty();
+                if (highPriorityReqs.length === 0) {
+                    $highPriorityList.append('<li>No high priority requirements.</li>');
+                } else {
+                    highPriorityReqs.forEach(function(item) {
+                        $highPriorityList.append('<li>' + item + '</li>');
+                    });
+                }
+
+                // Update dashboard summary
+                const $dashboardSummary = $('#dashboardSummary').empty();
+                $dashboardSummary.append('<li><strong>Total Requirements:</strong> ' + totalReqs + '</li>');
+                $dashboardSummary.append('<li><strong>Total Test Cases:</strong> ' + totalTests + '</li>');
+                $dashboardSummary.append('<li><strong>Coverage:</strong> ' + coverage + '%</li>');
+                $dashboardSummary.append('<li><strong>Uncovered Requirements:</strong> ' + uncoveredReqs.length + '</li>');
+                $dashboardSummary.append('<li><strong>High Priority Requirements:</strong> ' + highPriorityReqs.length + '</li>');
+
+                // Destroy old charts if they exist
+                if (window.coverageChartObj) window.coverageChartObj.destroy();
+                if (window.requirementTypesChartObj) window.requirementTypesChartObj.destroy();
+                if (window.priorityChartObj) window.priorityChartObj.destroy();
+
+                // Coverage Chart
+                window.coverageChartObj = new Chart($('#coverageChart'), {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Covered', 'Uncovered'],
+                        datasets: [{
+                            data: [coveredReqs, totalReqs - coveredReqs],
+                            backgroundColor: ['#2ecc71', '#e74c3c']
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: { position: 'bottom' },
+                            title: { display: true, text: 'Requirements Coverage' }
+                        }
+                    }
+                });
+
+                // Requirements Types Chart
+                window.requirementTypesChartObj = new Chart($('#requirementTypesChart'), {
+                    type: 'bar',
+                    data: {
+                        labels: Object.keys(requirementTypes),
+                        datasets: [{
+                            label: 'Number of Requirements',
+                            data: Object.values(requirementTypes),
+                            backgroundColor: '#0d6efd'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: { display: false },
+                            title: { display: true, text: 'Requirements by Type' }
+                        },
+                        scales: {
+                            y: { beginAtZero: true, ticks: { stepSize: 1 } }
+                        }
+                    }
+                });
+
+                // Priority Distribution Chart
+                window.priorityChartObj = new Chart($('#priorityChart'), {
+                    type: 'pie',
+                    data: {
+                        labels: Object.keys(priorityDistribution),
+                        datasets: [{
+                            data: Object.values(priorityDistribution),
+                            backgroundColor: ['#dc3545', '#ffc107', '#28a745']
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: { position: 'bottom' },
+                            title: { display: true, text: 'Requirements by Priority' }
+                        }
+                    }
+                });
+            }
+
+            // Render charts on Dashboard tab show
+            $('a[data-bs-toggle="tab"], button[data-bs-toggle="tab"]').on('shown.bs.tab', function (e) {
+                if ($(e.target).attr('id') === 'dashboard-tab') {
+                    renderDashboardCharts();
+                }
+            });
+            // Render once on page load if Dashboard is default
+            if ($('#dashboard').hasClass('show active')) {
+                renderDashboardCharts();
+            }
+
+            // Handle file input change
+            $('#file-input').change(function(e) {
+                const fileName = e.target.files[0]?.name || 'No file selected';
+                document.getElementById('file-name').textContent = fileName;
+            });
+            
+            // Handle form submission
+            $('#upload-form').submit(function() {
+                $('.loading').show();
+            });
+            
+            // Handle download button click
+            $('#downloadBtn').click(function() {
+                const format = $('#outputFormat').val();
+                window.location.href = `/download_report?format=${format}`;
+            });
+
+            // Handle edit button click
+            $('.edit-test-case').click(function() {
+                const button = $(this);
+                const modal = $('#editTestCaseModal');
+                
+                // Fill the form with current values
+                $('#editTestCaseId').val(button.data('test-case-id'));
+                $('#editRequirementId').val(button.data('requirement-id'));
+                $('#editDescription').val(button.data('description'));
+                $('#editPreconditions').val(button.data('preconditions'));
+                $('#editTestSteps').val(button.data('test-steps'));
+                $('#editExpectedResults').val(button.data('expected-results'));
+                $('#editPriority').val(button.data('priority'));
+                
+                // Show the modal
+                modal.modal('show');
+            });
+
+            // Handle save changes
+            $('#saveTestCase').click(function() {
+                const formData = {
+                    test_case_id: $('#editTestCaseId').val(),
+                    requirement_id: $('#editRequirementId').val(),
+                    description: $('#editDescription').val(),
+                    preconditions: $('#editPreconditions').val(),
+                    test_steps: $('#editTestSteps').val(),
+                    expected_results: $('#editExpectedResults').val(),
+                    priority: $('#editPriority').val()
+                };
+
+                // Send update to server
+                $.ajax({
+                    url: '/update_test_case',
+                    method: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(formData),
+                    success: function(response) {
+                        if (response.success) {
+                            // Update the table row
+                            const row = $(`button[data-test-case-id="${formData.test_case_id}"]`).closest('tr');
+                            row.find('td:eq(2)').text(formData.description);
+                            row.find('td:eq(3)').text(formData.preconditions);
+                            row.find('td:eq(4)').text(formData.test_steps);
+                            row.find('td:eq(5)').text(formData.expected_results);
+                            row.find('td:eq(6)').text(formData.priority);
+                            
+                            // Update the button's data attributes
+                            const button = row.find('.edit-test-case');
+                            button.data('description', formData.description);
+                            button.data('preconditions', formData.preconditions);
+                            button.data('test-steps', formData.test_steps);
+                            button.data('expected-results', formData.expected_results);
+                            button.data('priority', formData.priority);
+                            
+                            // Close the modal
+                            $('#editTestCaseModal').modal('hide');
+                            
+                            // Show success message
+                            alert('Test case updated successfully!');
+                        } else {
+                            alert('Error updating test case: ' + response.error);
+                        }
+                    },
+                    error: function() {
+                        alert('Error updating test case. Please try again.');
+                    }
+                });
+            });
+
+            // Handle edit requirement button click
+            $('.edit-requirement').click(function() {
+                const button = $(this);
+                const modal = $('#editRequirementModal');
+                
+                // Fill the form with current values
+                $('#editRequirementId').val(button.data('requirement-id'));
+                $('#editRequirementText').val(button.data('requirement-text'));
+                $('#editType').val(button.data('type'));
+                $('#editPriority').val(button.data('priority'));
+                $('#editFeedback').text(button.data('feedback'));
+                $('#editImprovements').html(button.data('improvements'));
+                $('#editVerificationCriteria').val(button.data('verification-criteria'));
+                
+                // Show the modal
+                modal.modal('show');
+            });
+
+            // Handle save changes
+            $('#saveRequirement').click(function() {
+                const verificationCriteria = $('#editVerificationCriteria').val().trim();
+                if (!verificationCriteria) {
+                    $('#editVerificationCriteria').addClass('is-invalid');
+                    $('#editVerificationCriteria')[0].focus();
+                    return;
+                } else {
+                    $('#editVerificationCriteria').removeClass('is-invalid');
+                }
+
+                const formData = {
+                    requirement_id: $('#editRequirementId').val(),
+                    requirement_text: $('#editRequirementText').val(),
+                    type: $('#editType').val(),
+                    priority: $('#editPriority').val(),
+                    feedback: $('#editFeedback').text(),
+                    improvements: $('#editImprovements').html(),
+                    verification_criteria: verificationCriteria
+                };
+
+                // Send update to server
+                $.ajax({
+                    url: '/update_requirement',
+                    method: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(formData),
+                    success: function(response) {
+                        if (response.success) {
+                            // Update the table row
+                            const row = $(`button[data-requirement-id="${formData.requirement_id}"]`).closest('tr');
+                            row.find('td:eq(1)').text(formData.requirement_text);
+                            row.find('td:eq(2)').text(formData.type);
+                            row.find('td:eq(3)').text(formData.priority);
+                            row.find('td:eq(10)').text(formData.verification_criteria);
+                            // Update the button's data attributes
+                            const button = row.find('.edit-requirement');
+                            button.data('requirement-text', formData.requirement_text);
+                            button.data('type', formData.type);
+                            button.data('priority', formData.priority);
+                            button.data('feedback', formData.feedback);
+                            button.data('improvements', formData.improvements);
+                            button.data('verification-criteria', formData.verification_criteria);
+                            // Close the modal
+                            $('#editRequirementModal').modal('hide');
+                            // Show success message
+                            alert('Requirement updated successfully!');
+                        } else {
+                            alert('Error updating requirement: ' + response.error);
+                        }
+                    },
+                    error: function() {
+                        alert('Error updating requirement. Please try again.');
+                    }
+                });
+            });
+
+            // Real-time validation for verification criteria
+            $('#editVerificationCriteria').on('input', function() {
+                if ($(this).val().trim()) {
+                    $(this).removeClass('is-invalid');
+                }
+            });
+        });
+    </script>
+</body>
+</html> 

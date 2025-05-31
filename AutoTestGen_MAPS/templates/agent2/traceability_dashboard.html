@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agent 2: SYS.1 to SYS.2 Traceability</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        /* Add your dark mode styles here */
+        body.dark-mode {
+            background-color: #343a40; /* Dark background */
+            color: #f8f9fa; /* Light text */
+        }
+        body.dark-mode .card {
+            background-color: #454d55; /* Slightly lighter dark for cards */
+            color: #f8f9fa; /* Light text for cards */
+            border-color: #6c757d; /* Subtle border */
+        }
+        body.dark-mode .card-title {
+            color: #f8f9fa; /* Ensure card titles are light */
+        }
+        body.dark-mode .list-group-item {
+             background-color: #454d55; /* Match card background */
+             color: #f8f9fa; /* Light text */
+             border-color: #6c757d; /* Subtle border */
+        }
+        body.dark-mode .navbar {
+             background-color: #212529 !important; /* Even darker navbar */
+        }
+         body.dark-mode .navbar-brand, body.dark-mode .nav-link {
+             color: #f8f9fa !important; /* Light text for navbar items */
+        }
+        body.dark-mode .subtitle {
+            color: #ced4da !important; /* Lighter gray for subtitle in dark mode */
+        }
+        body.dark-mode table.table thead th {
+            color: #f8f9fa; /* Light text for table headers */
+        }
+        body.dark-mode table.table tbody td {
+             color: #f8f9fa; /* Light text for table cells */
+        }
+        body.dark-mode .modal-content {
+             background-color: #454d55; /* Dark mode background for modal */
+             color: #f8f9fa; /* Light text for modal */
+        }
+         body.dark-mode .modal-header, body.dark-mode .modal-body, body.dark-mode .modal-footer {
+             border-color: #6c757d; /* Subtle border for modal parts */
+        }
+         body.dark-mode .form-label {
+             color: #f8f9fa; /* Light text for form labels in modal */
+        }
+         body.dark-mode .form-control {
+             background-color: #5a6268; /* Darker background for inputs */
+             color: #f8f9fa; /* Light text for inputs */
+             border-color: #6c757d;
+         }
+        body.dark-mode .form-control:focus {
+             border-color: #0d6efd; /* Highlight color for focused input */
+             box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+         }
+        /* Styles for Active Navbar Link */
+        .navbar .nav-link.active {
+            font-weight: bold;
+            color: #ffffff; /* White text for active link in light mode */
+        }
+
+        /* Dark mode adjustments for active navbar link */
+        body.dark-mode .navbar .nav-link.active {
+            color: #17a2b8 !important; /* Info blue for active link in dark mode */
+        }
+         /* Floating Help Button styles */
+        .floating-help-button {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 60px; /* Increase size */
+            height: 60px; /* Increase size */
+            font-size: 24px; /* Increase font size */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 0; /* Remove padding to center the icon */
+            z-index: 1050; /* Ensure it's above most elements */
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            transition: background-color 0.3s ease;
+        }
+
+        .floating-help-button:hover {
+            background-color: #0b5ed7; /* Darker shade on hover */
+        }
+
+        /* Optional: Dark mode adjustments for the button if needed */
+        body.dark-mode .floating-help-button {
+            background-color: #0d6efd; /* Match dark mode primary button */
+            color: #fff;
+        }
+         body.dark-mode .floating-help-button:hover {
+            background-color: #0b5ed7; /* Darker shade on hover in dark mode */
+        }
+         /* Modal Title Color */
+        .modal-title {
+            color: #0d6efd; /* Bootstrap primary blue */
+        }
+        body.dark-mode .modal-title {
+            color: #ffffff; /* White color for modal title in dark mode */
+        }
+        /* Dark mode styles for modals */
+        body.dark-mode .modal-content {
+            background-color: #454d55; /* Dark background for modal content */
+            color: #f8f9fa; /* Light text for modal */
+        }
+        body.dark-mode .modal-body {
+            color: #f8f9fa; /* Ensure text in modal body is light */
+        }
+         body.dark-mode .modal-body a {
+             color: #bbdaff; /* Lighter blue for links in dark mode modal */
+         }
+        body.dark-mode .modal-header, body.dark-mode .modal-footer {
+            border-color: #6c757d; /* Subtle border for modal parts */
+        }
+         body.dark-mode .modal-body strong {
+             color: #f8f9fa; /* Ensure strong text is light */
+         }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/">[MAPS]-RE System Home</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/agent/1">SYS.1 Elicitation</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/agent/2">SYS.2 Analysis</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/agent/3">SYS.2 Review</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/agent/4">SYS.5 Testcase Generation</a>
+                    </li>
+                    <!-- Link back to Agent 2 Dashboard -->
+                    <li class="nav-item">
+                        <a class="nav-link" href="/agent/2">Back to Agent 2 Dashboard</a>
+                    </li>
+                </ul>
+                <!-- Dark Mode Toggle -->
+                <div class="form-check form-switch ms-auto">
+                    <input class="form-check-input" type="checkbox" id="darkModeToggle">
+                    <label class="form-check-label text-light" for="darkModeToggle">Dark Mode</label>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <h2>SYS.1 to SYS.2 Traceability and Dashboard</h2>
+
+        <!-- Summary Section (Placeholder) -->
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Traceability Summary (SYS.1 to SYS.2)</h5>
+                        <div id="traceabilitySummaryAgent2">
+                            <p class="text-muted">Summary will appear here.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                 <div class="card">
+                     <div class="card-body">
+                         <h5 class="card-title">Dependency Overview</h5>
+                         <div id="dependencyOverviewAgent2">
+                             <p class="text-muted">Dependency overview will appear here.</p>
+                         </div>
+                     </div>
+                 </div>
+            </div>
+        </div>
+
+        <!-- Traceability Table -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <h5 class="card-title">Traceability Details (SYS.1 -> SYS.2)</h5>
+                <div class="table-responsive">
+                    <table class="table table-bordered align-middle" id="traceabilityTableAgent2">
+                        <thead>
+                            <tr>
+                                <th>SYS.1 Req. ID</th>
+                                <th>SYS.1 System Requirement</th>
+                                <th>Linked SYS.2 Req. ID(s)</th>
+                                <th>Linked SYS.2 Requirement(s)</th>
+                                <th>Relationship</th> <!-- e.g., "derived from" -->
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Traceability rows will be dynamically added here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+         <!-- Dependency Graph Section (Optional, can be complex) -->
+         <!-- For simplicity, we'll focus on the table view first -->
+
+    </div>
+
+    <!-- Floating Help Button -->
+    <button class="btn btn-primary rounded-circle floating-help-button" data-bs-toggle="modal" data-bs-target="#helpModalAgent2Traceability">
+        ❓
+    </button>
+
+    <!-- Help Modal -->
+    <div class="modal fade" id="helpModalAgent2Traceability" tabindex="-1" aria-labelledby="helpModalAgent2TraceabilityLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="helpModalAgent2TraceabilityLabel">MAPS Assistant: About Agent 2 Traceability</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>This dashboard shows the traceability between SYS.1 Elicitation requirements and the drafted SYS.2 Analysis requirements.</p>
+                    <ul>
+                        <li><strong>Traceability Summary:</strong> Provides counts of traced and untraced requirements.</li>
+                        <li><strong>Dependency Overview:</strong> Highlights key relationships identified by Agent 2.</li>
+                        <li><strong>Traceability Details Table:</strong> Lists each SYS.1 requirement and the SYS.2 requirements linked to it, showing the relationship type.</li>
+                    </ul>
+                    <p>Use this page to verify the connections and understand how the initial requirements have been transformed and structured by the Analysis agent.</p>
+                     <hr>
+                    <p>Need more detailed information?</p>
+                    <p><a href="#" target="_blank">Link to Documentation (Placeholder)</a></p>
+                    <p><a href="#" target="_blank">Link to Glossary (Placeholder)</a></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Dark Mode Toggle Logic
+        const darkModeToggle = document.getElementById('darkModeToggle');
+        const body = document.body;
+
+        // Load saved preference
+        const savedMode = localStorage.getItem('darkMode');
+        if (savedMode) {
+            body.classList.toggle('dark-mode', savedMode === 'enabled');
+            if (savedMode === 'enabled') {
+                darkModeToggle.checked = true;
+            }
+        }
+
+        darkModeToggle.addEventListener('change', function() {
+            if (this.checked) {
+                body.classList.add('dark-mode');
+                localStorage.setItem('darkMode', 'enabled');
+            } else {
+                body.classList.remove('dark-mode');
+                localStorage.setItem('darkMode', 'disabled');
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', function() {
+            fetchTraceabilityData();
+        });
+
+        function fetchTraceabilityData() {
+            fetch('/api/agent2/traceability_data')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        displayTraceabilityTable(data.traceability_data);
+                        displaySummary(data.summary);
+                        displayDependencyOverview(data.dependency_overview);
+                    } else {
+                        console.error('Error fetching Agent 2 traceability data:', data.message);
+                        document.getElementById('traceabilityTableAgent2').querySelector('tbody').innerHTML = '<tr><td colspan="5" class="text-center">Error loading traceability data.</td></tr>';
+                         document.getElementById('traceabilitySummaryAgent2').innerHTML = '<p class="text-danger">Error loading summary.</p>';
+                         document.getElementById('dependencyOverviewAgent2').innerHTML = '<p class="text-danger">Error loading overview.</p>';
+                    }
+                })
+                .catch(error => {
+                    console.error('Fetch error for Agent 2 traceability data:', error);
+                    document.getElementById('traceabilityTableAgent2').querySelector('tbody').innerHTML = '<tr><td colspan="5" class="text-center">Error loading traceability data.</td></tr>';
+                     document.getElementById('traceabilitySummaryAgent2').innerHTML = '<p class="text-danger">Error loading summary.</p>';
+                     document.getElementById('dependencyOverviewAgent2').innerHTML = '<p class="text-danger">Error loading overview.</p>';
+                });
+        }
+
+        function displayTraceabilityTable(traceabilityData) {
+            const tableBody = document.querySelector('#traceabilityTableAgent2 tbody');
+            tableBody.innerHTML = '';
+
+            if (!traceabilityData || traceabilityData.length === 0) {
+                 tableBody.innerHTML = '<tr><td colspan="5" class="text-center">No SYS.1 to SYS.2 traceability data found.</td></tr>';
+                 return;
+            }
+
+            traceabilityData.forEach(item => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${item.sys1_id || ''}</td>
+                    <td>${item.sys1_requirement || ''}</td>
+                    <td>${item.linked_sys2_ids.join(', ') || ''}</td>
+                    <td>${item.linked_sys2_requirements.join('; ') || ''}</td>
+                    <td>${item.relationship || ''}</td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        function displaySummary(summaryData) {
+             const summaryDiv = document.getElementById('traceabilitySummaryAgent2');
+             if (!summaryData) {
+                 summaryDiv.innerHTML = '<p class="text-muted">Summary data not available.</p>';
+                 return;
+             }
+             summaryDiv.innerHTML = `
+                 <p>Total SYS.1 Requirements: <strong>${summaryData.total_sys1}</strong></p>
+                 <p>SYS.1 Requirements Traced to SYS.2: <strong>${summaryData.traced_sys1}</strong></p>
+                 <p>SYS.1 Requirements Not Traced to SYS.2: <strong>${summaryData.untraced_sys1}</strong></p>
+                 <p>Total SYS.2 Requirements Generated: <strong>${summaryData.total_sys2}</strong></p>
+             `;
+        }
+
+         function displayDependencyOverview(overviewData) {
+             const overviewDiv = document.getElementById('dependencyOverviewAgent2');
+             if (!overviewData || overviewData.length === 0) {
+                 overviewDiv.innerHTML = '<p class="text-muted">No specific dependency overview available.</p>';
+                 return;
+             }
+             let html = '<ul>';
+             overviewData.forEach(dep => {
+                 html += `<li>${dep}</li>`; // Assuming overviewData is a list of strings
+             });
+             html += '</ul>';
+             overviewDiv.innerHTML = html;
+         }
+
+    </script>
+</body>
+</html> 

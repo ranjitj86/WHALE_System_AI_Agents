@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Traceability Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .table-success-light {
+            background-color: #d4edda !important; /* Lighter green */
+        }
+        .table-danger-light {
+            background-color: #f8d7da !important; /* Lighter red */
+        }
+        .table-warning-light {
+            background-color: #fff3cd !important; /* Lighter yellow for missing traces */
+        }
+        .chart-container {
+            position: relative;
+            margin: auto;
+            height: 400px;
+            width: 400px;
+        }
+        /* Floating Help Button styles */
+        .floating-help-button {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 60px; /* Increase size */
+            height: 60px; /* Increase size */
+            font-size: 24px; /* Increase font size */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 0; /* Remove padding to center the icon */
+            z-index: 1050; /* Ensure it's above most elements */
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            transition: background-color 0.3s ease;
+        }
+
+        .floating-help-button:hover {
+            background-color: #0b5ed7; /* Darker shade on hover */
+        }
+
+        /* Optional: Dark mode adjustments for the button if needed */
+        body.dark-mode .floating-help-button {
+            background-color: #0d6efd; /* Match dark mode primary button */
+            color: #fff;
+        }
+         body.dark-mode .floating-help-button:hover {
+            background-color: #0b5ed7; /* Darker shade on hover in dark mode */
+        }
+        /* Floating Feedback Button styles */
+        .floating-feedback-container {
+            position: fixed;
+            bottom: 90px; /* Position above the help button */
+            right: 20px;
+            z-index: 1050;
+        }
+        .floating-feedback-button {
+            display: flex;
+            align-items: center;
+            padding: 5px 15px;
+            font-size: 1rem;
+        }
+         body.dark-mode .floating-feedback-button {
+             background-color: #6c757d; /* Dark mode secondary button color */
+             color: #f8f9fa;
+         }
+         body.dark-mode .floating-feedback-button:hover {
+             background-color: #5a6268; /* Darker shade on hover */
+         }
+        /* Modal Title Color */
+        .modal-title {
+            color: #0d6efd; /* Bootstrap primary blue */
+        }
+        body.dark-mode .modal-title {
+            color: #ffffff; /* White color for modal title in dark mode */
+        }
+        /* Dark mode styles for Traceability Dashboard */
+        body.dark-mode table.table thead th {
+             color: #f8f9fa; /* Light text for table headers in dark mode */
+        }
+        body.dark-mode table.table tbody td {
+             color: #f8f9fa; /* Light text for table cells in dark mode */
+        }
+        body.dark-mode .table-success-light {
+            background-color: #155724 !important; /* Darker green for success rows */
+            color: #d4edda !important;
+        }
+        body.dark-mode .table-danger-light {
+            background-color: #721c24 !important; /* Darker red for danger rows */
+            color: #f8d7da !important;
+        }
+        body.dark-mode .table-warning-light {
+            background-color: #664d03 !important; /* Darker yellow for warning rows */
+            color: #ffecb5 !important;
+        }
+        /* Chart.js tooltip text color in dark mode */
+        body.dark-mode .chartjs-tooltip {
+            color: #212529; /* Dark text for tooltips to be visible on light background */
+        }
+        /* Dark mode styles for text below charts */
+        body.dark-mode .card-body .mt-3.text-center {
+             color: #f8f9fa; /* Light text */
+        }
+        /* Dark mode styles for modals */
+        body.dark-mode .modal-content {
+            background-color: #454d55; /* Dark background for modal content */
+            color: #f8f9fa; /* Light text for modal */
+        }
+        body.dark-mode .modal-body {
+            color: #f8f9fa; /* Ensure text in modal body is light */
+        }
+         body.dark-mode .modal-body a {
+             color: #bbdaff; /* Lighter blue for links in dark mode modal */
+         }
+        body.dark-mode .modal-header, body.dark-mode .modal-footer {
+            border-color: #6c757d; /* Subtle border for modal parts */
+        }
+         body.dark-mode .modal-body strong {
+             color: #f8f9fa; /* Ensure strong text is light */
+         }
+        #traceabilityTable th,
+        #traceabilityTable td {
+            vertical-align: middle;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/">[MAPS]-RE System Home</a>
+             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/agent/1">SYS.1 Elicitation</a>
+                    </li>
+                     <li class="nav-item">
+                        <a class="nav-link" href="/agent/2">SYS.2 Analysis</a>
+                    </li>
+                     <li class="nav-item">
+                        <a class="nav-link" href="/agent/3">SYS.2 Review</a>
+                    </li>
+                     <li class="nav-item">
+                        <a class="nav-link" href="/agent/4">SYS.5 Testcase Generation</a>
+                    </li>
+                </ul>
+                <!-- Dark Mode Toggle -->
+                <div class="form-check form-switch ms-auto">
+                    <input class="form-check-input" type="checkbox" id="darkModeToggle">
+                    <label class="form-check-label text-light" for="darkModeToggle">Dark Mode</label>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <h2>Traceability and Status Dashboard</h2>
+
+        <!-- New row for the charts side-by-side -->
+        <div class="row mt-4">
+            <div class="col-md-6">
+                <!-- Card for Customer Requirement Traceability Status -->
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Traceability Status (Customer Req.)</h5>
+                        <div class="chart-container">
+                             <canvas id="statusPieChartCustomer"></canvas>
+                        </div>
+                        <div class="mt-3 text-center">
+                             <p>Total Customer Requirements: <span id="totalReqsCustomer">0</span></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <!-- Card for Overall Status (SYS.1) -->
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Overall Status (SYS.1)</h5>
+                        <div class="chart-container">
+                             <canvas id="statusPieChartSYS1"></canvas>
+                        </div>
+                         <div class="mt-3 text-center">
+                            <p>Total SYS.1 Requirements: <span id="totalReqsSYS1">0</span></p>
+                         </div>
+                    </div>
+                </div>
+            </div>
+        </div> <!-- Close the new row for charts -->
+
+        <div class="row mt-4">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Traceability (CUST_REQ to SYS.1)</h5>
+                        <div class="table-responsive">
+                            <table class="table table-bordered align-middle" id="traceabilityTable">
+                                <thead>
+                                    <tr>
+                                        <th>Customer Req. ID</th>
+                                        <th>SYS.1 Req. ID</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- Traceability rows will be dynamically added here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            fetchTraceabilityData();
+        });
+
+        function fetchTraceabilityData() {
+            fetch('/api/traceability_data')
+                .then(response => response.json())
+                .then(data => {
+                    // Backend returns customer_requirements and sys1_requirements separately
+                    const customerRequirements = data.customer_requirements || [];
+                    const sys1Requirements = data.sys1_requirements || [];
+
+                    // Create a map of customer requirements for easy lookup, accessible to both display functions
+                    const customerMap = {};
+                    customerRequirements.forEach(req => {
+                        customerMap[req.customer_id] = req;
+                    });
+
+                    displayTraceabilityTable(customerRequirements, sys1Requirements, customerMap);
+                    displayStatusCharts(customerRequirements, sys1Requirements, customerMap);
+                })
+                .catch(error => console.error('Error fetching traceability data:', error));
+        }
+
+        function displayTraceabilityTable(customerRequirements, sys1Requirements, customerMap) {
+            const tableBody = document.querySelector('#traceabilityTable tbody');
+            tableBody.innerHTML = '';
+
+            // Iterate through SYS.1 requirements and build rows showing traceability
+            sys1Requirements.forEach(sys1Req => {
+                const row = document.createElement('tr');
+                let rowClass = '';
+
+                // Determine row class based on SYS.1 requirement status for the traceability view
+                if (sys1Req.req_status === 'Approved') {
+                    rowClass = 'table-success-light';
+                } else if (sys1Req.req_status === 'Rejected') {
+                    rowClass = 'table-danger-light';
+                }
+                 // Highlight rows if trace is missing or it's a padded requirement
+                if (!sys1Req.customer_trace_ids || sys1Req.customer_trace_ids.length === 0 || !sys1Req.sys1_requirement) {
+                     rowClass = 'table-warning-light';
+                }
+
+                row.className = rowClass;
+
+                // Display Customer Req. IDs traced from (join multiple if 1:Many is implemented)
+                const customerTraceIds = sys1Req.customer_trace_ids ? sys1Req.customer_trace_ids.join(', ') : '';
+
+                row.innerHTML = `
+                    <td>${customerTraceIds}</td>
+                    <td>${sys1Req.sys1_id || ''}</td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        function displayStatusCharts(customerRequirements, sys1Requirements, customerMap) {
+            // --- SYS.1 Status Chart ---
+            const totalReqsSYS1 = sys1Requirements.length;
+            document.getElementById('totalReqsSYS1').textContent = totalReqsSYS1;
+
+            const approvedCountSYS1 = sys1Requirements.filter(req => req.req_status === 'Approved').length;
+            const rejectedCountSYS1 = sys1Requirements.filter(req => req.req_status === 'Rejected').length;
+            const draftCountSYS1 = totalReqsSYS1 - approvedCountSYS1 - rejectedCountSYS1;
+
+            const statusCountsSYS1 = {
+                'Approved': approvedCountSYS1,
+                'Rejected': rejectedCountSYS1,
+                'Draft': draftCountSYS1
+            };
+
+            const ctxSYS1 = document.getElementById('statusPieChartSYS1').getContext('2d');
+
+            // Destroy existing chart if it exists
+            if (window.statusPieChartSYS1 && typeof window.statusPieChartSYS1.destroy === 'function') {
+                window.statusPieChartSYS1.destroy();
+            }
+
+            window.statusPieChartSYS1 = new Chart(ctxSYS1, {
+                type: 'pie',
+                data: {
+                    labels: Object.keys(statusCountsSYS1),
+                    datasets: [{
+                        data: Object.values(statusCountsSYS1),
+                        backgroundColor: [
+                            '#4BC0C0', // Green for Approved
+                            '#FF6384', // Red for Rejected
+                            '#FFD700'  // Yellow for Draft
+                        ],
+                        hoverBackgroundColor: [
+                            '#4BC0C0', // Green
+                            '#FF6384', // Red
+                            '#FFD700'  // Yellow
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        },
+                        title: {
+                            display: false,
+                            text: 'SYS.1 Status'
+                        }
+                    }
+                },
+            });
+
+            // --- Customer Requirement Traceability Status Chart ---
+            const totalReqsCustomer = customerRequirements.length;
+            document.getElementById('totalReqsCustomer').textContent = totalReqsCustomer;
+
+            const tracedCustomerIds = new Set();
+            sys1Requirements.forEach(sys1Req => {
+                if (sys1Req.customer_trace_ids) {
+                    sys1Req.customer_trace_ids.forEach(custId => {
+                         if (customerMap[custId]) { // Ensure the traced ID corresponds to an actual customer requirement
+                            tracedCustomerIds.add(custId);
+                         }
+                    });
+                }
+            });
+
+            const tracedCustomerCount = tracedCustomerIds.size;
+            const notTracedCustomerCount = totalReqsCustomer - tracedCustomerCount;
+
+            const statusCountsCustomer = {
+                'Traced to SYS.1': tracedCustomerCount,
+                'Not Traced to SYS.1': notTracedCustomerCount
+            };
+
+            const ctxCustomer = document.getElementById('statusPieChartCustomer').getContext('2d');
+
+             // Destroy existing chart if it exists
+            if (window.statusPieChartCustomer && typeof window.statusPieChartCustomer.destroy === 'function') {
+                window.statusPieChartCustomer.destroy();
+            }
+
+            window.statusPieChartCustomer = new Chart(ctxCustomer, {
+                type: 'pie',
+                data: {
+                    labels: Object.keys(statusCountsCustomer),
+                    datasets: [{
+                        data: Object.values(statusCountsCustomer),
+                        backgroundColor: [
+                            '#36A2EB', // Blue for Traced
+                            '#FFCD56' // Yellow for Not Traced
+                        ],
+                        hoverBackgroundColor: [
+                            '#36A2EB', // Blue
+                            '#FFCD56' // Yellow
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        },
+                        title: {
+                            display: false,
+                            text: 'Customer Traceability Status'
+                        }
+                    }
+                },
+            });
+
+        }
+
+    </script>
+    <script>
+        // Dark Mode Toggle Logic
+        const darkModeToggle = document.getElementById('darkModeToggle');
+        const body = document.body;
+
+        // Load saved preference
+        const savedMode = localStorage.getItem('darkMode');
+        if (savedMode) {
+            body.classList.toggle('dark-mode', savedMode === 'enabled');
+            if (savedMode === 'enabled') {
+                darkModeToggle.checked = true;
+            }
+        }
+
+        darkModeToggle.addEventListener('change', function() {
+            if (this.checked) {
+                body.classList.add('dark-mode');
+                localStorage.setItem('darkMode', 'enabled');
+            } else {
+                body.classList.remove('dark-mode');
+                localStorage.setItem('darkMode', 'disabled');
+            }
+        });
+    </script>
+    <script>
+        // Feedback Button Logic (Placeholder for now)
+        document.addEventListener('DOMContentLoaded', function() {
+            const feedbackButton = document.querySelector('.floating-feedback-container .btn'); // Select the button inside the container
+            const feedbackModal = new bootstrap.Modal(document.getElementById('feedbackModal'));
+
+            if (feedbackButton) { // Check if button exists before adding listener
+                feedbackButton.addEventListener('click', function() {
+                    // Optionally, you could check which icon was clicked here if needed
+                    // For now, just open the modal
+                    feedbackModal.show();
+                });
+            }
+        });
+    </script>
+    <script>
+        // Handle Submit Feedback button click for Traceability Dashboard page
+        document.getElementById('submitFeedbackBtn').addEventListener('click', function() {
+            const feedbackText = document.getElementById('feedbackText').value;
+            const feedbackModalElement = document.getElementById('feedbackModal');
+            const feedbackModalInstance = bootstrap.Modal.getInstance(feedbackModalElement);
+
+            if (feedbackText.trim() === '') {
+                alert('Please enter some feedback before submitting.');
+                return;
+            }
+
+            fetch('/api/submit_feedback', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    feedback: feedbackText,
+                    page: 'Traceability Dashboard Page' // Indicate which page the feedback is from
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Feedback submission response:', data);
+                alert(data.message); // Show success or error message from backend
+                if (data.status === 'success') {
+                    // Clear the textarea and close the modal on success
+                    document.getElementById('feedbackText').value = '';
+                    feedbackModalInstance.hide();
+                }
+            })
+            .catch(error => {
+                console.error('Error submitting feedback:', error);
+                alert('An error occurred while submitting feedback.');
+            });
+        });
+    </script>
+    <!-- Floating Help Button -->
+    <button class="btn btn-primary rounded-circle floating-help-button" data-bs-toggle="modal" data-bs-target="#helpModal">
+        ❓
+    </button>
+
+    <!-- Floating Feedback Button -->
+    <div class="floating-feedback-container">
+    <!-- Help Modal -->
+    <div class="modal fade" id="helpModal" tabindex="-1" aria-labelledby="helpModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="helpModalLabel">MAPS Assistant: What can I do here? (Traceability Dashboard)</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>This dashboard provides traceability information between Customer Requirements and SYS.1 Requirements, along with status summaries.</p>
+                    <ul>
+                        <li><strong>Traceability Status (Customer Req.):</strong> A pie chart showing how many customer requirements have been traced to SYS.1 requirements.</li>
+                        <li><strong>Overall Status (SYS.1):</strong> A pie chart showing the status distribution (Approved, Rejected, Draft) of SYS.1 requirements.</li>
+                        <li><strong>Requirement Traceability Table:</strong> A table listing the links between Customer Requirement IDs and SYS.1 Requirement IDs.</li>
+                    </ul>
+                    <p>Use this dashboard to monitor the completeness of your requirement elicitation and the status of the drafted SYS.1 requirements.</p>
+                     <hr>
+                    <p>Need more detailed information?</p>
+                    <p><a href="#" target="_blank">Link to Documentation (Placeholder)</a></p>
+                    <p><a href="#" target="_blank">Link to Glossary (Placeholder)</a></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                }
+            }
+        }
+    </div>
+    <!-- Feedback Modal -->
+    <div class="modal fade" id="feedbackModal" tabindex="-1" aria-labelledby="feedbackModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="feedbackModalLabel">Provide Feedback</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>We appreciate your feedback! What could be improved on the Traceability Dashboard?</p>
+                    <textarea class="form-control" id="feedbackText" rows="4"></textarea>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="submitFeedbackBtn">Submit Feedback</button>
+                </div>
+            }
+        }
+    </div>
+</body>
+</html> 

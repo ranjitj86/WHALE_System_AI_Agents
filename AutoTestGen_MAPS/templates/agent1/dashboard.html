@@ -1,0 +1,731 @@
+{% extends "base.html" %}
+{% block title %}Agent 1: Requirement Elicitation{% endblock %}
+{% block content %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agent 1: Requirement Elicitation</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        .drop-zone {
+            border: 2px dashed #ccc;
+            border-radius: 4px;
+            padding: 20px;
+            text-align: center;
+            background: #f8f9fa;
+            cursor: pointer;
+        }
+        .drop-zone:hover {
+            border-color: #0d6efd;
+        }
+        .requirement-card {
+            margin-bottom: 1rem;
+        }
+        .confidence-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+        }
+        .table-reject {
+            background-color: #ffeaea !important;
+        }
+        .table-accept {
+            background-color: #e6ffe6 !important;
+        }
+        .agent-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-left: 10px;
+        }
+        .agent-1-indicator {
+            background-color: #007bff;
+        }
+        /* Dark mode styles */
+        body.dark-mode {
+            background-color: #343a40; /* Dark background */
+            color: #f8f9fa; /* Light text */
+        }
+        body.dark-mode .card {
+            background-color: #454d55; /* Slightly lighter dark for cards */
+            color: #f8f9fa; /* Light text for cards */
+            border-color: #6c757d; /* Subtle border */
+        }
+        body.dark-mode .card-title {
+            color: #f8f9fa; /* Ensure card titles are light */
+        }
+        body.dark-mode .list-group-item {
+             background-color: #454d55; /* Match card background */
+             color: #f8f9fa; /* Light text */
+             border-color: #6c757d; /* Subtle border */
+        }
+        body.dark-mode .navbar {
+             background-color: #212529 !important; /* Even darker navbar */
+        }
+         body.dark-mode .navbar-brand, body.dark-mode .nav-link {
+             color: #f8f9fa !important; /* Light text for navbar items */
+        }
+        body.dark-mode .subtitle {
+            color: #ced4da !important; /* Lighter gray for subtitle in dark mode */
+        }
+        body.dark-mode table.table thead th {
+            color: #f8f9fa; /* Light text for table headers */
+        }
+        body.dark-mode table.table tbody td {
+             color: #f8f9fa; /* Light text for table cells */
+        }
+        body.dark-mode .modal-content {
+             background-color: #454d55; /* Dark mode background for modal */
+             color: #f8f9fa; /* Light text for modal */
+        }
+         body.dark-mode .modal-header, body.dark-mode .modal-body, body.dark-mode .modal-footer {
+             border-color: #6c757d; /* Subtle border for modal parts */
+        }
+         body.dark-mode .form-label {
+             color: #f8f9fa; /* Light text for form labels in modal */
+        }
+         body.dark-mode .form-control {
+             background-color: #5a6268; /* Darker background for inputs */
+             color: #f8f9fa; /* Light text for inputs */
+             border-color: #6c757d;
+         }
+        body.dark-mode .form-control:focus {
+             border-color: #0d6efd; /* Highlight color for focused input */
+             box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+         }
+        body.dark-mode .table-reject {
+             background-color: #721c24 !important; /* Darker red for rejected in dark mode */
+             color: #f8d7da !important;
+        }
+        body.dark-mode .table-accept {
+             background-color: #155724 !important; /* Darker green for approved in dark mode */
+             color: #d4edda !important;
+        }
+        /* Floating Help Button styles */
+        .floating-help-button {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 60px; /* Increase size */
+            height: 60px; /* Increase size */
+            font-size: 24px; /* Increase font size */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 0; /* Remove padding to center the icon */
+            z-index: 1050; /* Ensure it's above most elements */
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            transition: background-color 0.3s ease;
+        }
+
+        .floating-help-button:hover {
+            background-color: #0b5ed7; /* Darker shade on hover */
+        }
+
+        /* Optional: Dark mode adjustments for the button if needed */
+        body.dark-mode .floating-help-button {
+            background-color: #0d6efd; /* Match dark mode primary button */
+            color: #fff;
+        }
+         body.dark-mode .floating-help-button:hover {
+            background-color: #0b5ed7; /* Darker shade on hover in dark mode */
+        }
+        /* Floating Feedback Button styles */
+        .floating-feedback-container {
+            position: fixed;
+            bottom: 90px; /* Position above the help button */
+            right: 20px;
+            z-index: 1050;
+        }
+        .floating-feedback-button {
+            display: flex;
+            align-items: center;
+            padding: 5px 15px;
+            font-size: 1rem;
+        }
+         body.dark-mode .floating-feedback-button {
+             background-color: #6c757d; /* Dark mode secondary button color */
+             color: #f8f9fa;
+         }
+         body.dark-mode .floating-feedback-button:hover {
+             background-color: #5a6268; /* Darker shade on hover */
+         }
+        /* Modal Title Color */
+        .modal-title {
+            color: #0d6efd; /* Bootstrap primary blue */
+        }
+        body.dark-mode .modal-title {
+            color: #ffffff; /* White color for modal title in dark mode */
+        }
+        /* Dark mode styles for Agent 1 Dashboard */
+        body.dark-mode .drop-zone {
+             background-color: #454d55; /* Match card background */
+             color: #f8f9fa; /* Light text */
+             border-color: #6c757d;
+        }
+        body.dark-mode .drop-zone:hover {
+             border-color: #0d6efd;
+        }
+        body.dark-mode #uploadedFilesList {
+             color: #f8f9fa; /* Light text for file list */
+        }
+        body.dark-mode .text-muted {
+            color: #ced4da !important; /* Lighter gray for muted text in dark mode */
+        }
+        /* Dark mode styles for modals */
+        body.dark-mode .modal-content {
+            background-color: #454d55; /* Dark background for modal content */
+            color: #f8f9fa; /* Light text for modal */
+        }
+        body.dark-mode .modal-body {
+            color: #f8f9fa; /* Ensure text in modal body is light */
+        }
+         body.dark-mode .modal-body a {
+             color: #bbdaff; /* Lighter blue for links in dark mode modal */
+         }
+        body.dark-mode .modal-header, body.dark-mode .modal-footer {
+            border-color: #6c757d; /* Subtle border for modal parts */
+        }
+         body.dark-mode .modal-body strong {
+             color: #f8f9fa; /* Ensure strong text is light */
+         }
+        /* Styles for Active Navbar Link */
+        .navbar .nav-link.active {
+            font-weight: bold;
+            color: #ffffff !important; /* White text for active link */
+            background-color: #0d6efd !important; /* Bootstrap primary blue */
+        }
+
+        /* Dark mode adjustments for active navbar link */
+        body.dark-mode .navbar .nav-link.active {
+            color: #ffffff !important; /* White text for active link in dark mode */
+            background-color: #0d6efd !important; /* Bootstrap primary blue */
+        }
+        body { padding-top: 70px; }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+        <div class="d-flex align-items-center w-100">
+            <a class="navbar-brand me-0" href="/">[WHALE-RE]: Home</a>
+            <div class="navbar-nav d-flex flex-row ms-0">
+                <a class="nav-link px-2 {% if request.path == '/agent/1' %}active{% endif %}" href="/agent/1">SYS.1 Elicitation</a>
+                <a class="nav-link px-2 {% if request.path == '/agent/2' %}active{% endif %}" href="/agent/2">SYS.2 Analysis</a>
+                <a class="nav-link px-2 {% if request.path == '/agent/3' %}active{% endif %}" href="/agent/3">SYS.2 Review</a>
+                <a class="nav-link px-2 {% if request.path == '/agent/4' %}active{% endif %}" href="/agent/4">SYS.5 Testcase Generation</a>
+            </div>
+            <div class="form-check form-switch ms-auto">
+                <input class="form-check-input" type="checkbox" id="darkModeToggle">
+                <label class="form-check-label text-light" for="darkModeToggle">Dark Mode</label>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Colored Tabs Navigation -->
+    <!-- REMOVE Colored Tabs Navigation -->
+    
+
+    <div class="container-fluid py-4">
+        <h2 class="mb-4">Agent 1 - SYS.1 Elicitation</h2>
+        <!-- Upload Requirements Section -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <h5 class="card-title">Upload Requirements</h5>
+                <div class="drop-zone" id="dropZone">
+                    <i class="bi bi-cloud-upload fs-1"></i>
+                    <p class="mt-2">Drag and drop files here or click to browse</p>
+                    <input type="file" id="fileInput" class="d-none" multiple>
+                </div>
+                <div class="mt-3">
+                    <small class="text-muted">Supported formats: TXT, DOCX, PDF, XLSX, CSV, PPT, EML, MSG</small>
+                </div>
+                <div class="mt-2" id="uploadedFilesList"></div>
+                <div class="mt-4">
+                    <label for="rawContent" class="form-label">Paste Raw Content (Emails, Transcripts, etc.)</label>
+                    <textarea class="form-control" id="rawContent" rows="4" placeholder="Paste text here..."></textarea>
+                </div>
+                <div class="mt-3">
+                    <button class="btn btn-primary" id="uploadBtn">Process Inputs</button>
+                </div>
+                <!-- Processing Status -->
+                <div class="alert alert-info mt-3 d-none" id="processingStatus">
+                    <i class="bi bi-info-circle"></i>
+                    <span id="statusMessage">Processing requirements...</span>
+                </div>
+            </div>
+        </div>
+        <!-- Progress Bar -->
+        <div class="progress d-none mt-2" id="processingProgressBar">
+            <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100" style="width: 100%"></div>
+        </div>
+        <!-- Export Options Section -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div class="d-flex align-items-center">
+                        <h5 class="card-title mb-0 me-3">Export Options</h5>
+                        <div class="btn-group">
+                            <button class="btn btn-outline-primary" onclick="exportRequirements('docx')">DOCX</button>
+                            <button class="btn btn-outline-primary" onclick="exportRequirements('xlsx')">XLSX</button>
+                            <button class="btn btn-outline-primary" onclick="exportRequirements('csv')">CSV</button>
+                            <button class="btn btn-outline-primary" onclick="exportRequirements('pdf')">PDF</button>
+                        </div>
+                    </div>
+                    <a href="/traceability" class="btn btn-outline-secondary">Go to Traceability Dashboard</a>
+                </div>
+            </div>
+        </div>
+        <!-- Extracted Requirements Table Section -->
+        <div class="card">
+            <div class="card-body">
+                <div class="mb-3">
+                    <h5 class="card-title mb-0">Extracted Requirements</h5>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-bordered align-middle" id="requirementsTable">
+                        <thead>
+                            <tr>
+                                <th>Customer Req. ID</th>
+                                <th>Customer Requirement</th>
+                                <th>SYS.1 Req. ID</th>
+                                <th>SYS.1 System Requirement</th>
+                                <th>Domain</th>
+                                <th>Priority</th>
+                                <th>Rationale</th>
+                                <th>Requirement Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Rows will be dynamically added here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Requirement Card Template -->
+    <template id="requirementCardTemplate">
+        <div class="col-md-6 requirement-card">
+            <div class="card">
+                <div class="card-body">
+                    <span class="badge bg-primary confidence-badge">Confidence: 85%</span>
+                    <h6 class="card-subtitle mb-2 text-muted">SYS.1.1</h6>
+                    <p class="card-text">Requirement content goes here...</p>
+                    <div class="btn-group">
+                        <button class="btn btn-sm btn-outline-primary">Edit</button>
+                        <button class="btn btn-sm btn-outline-success">Accept</button>
+                        <button class="btn btn-sm btn-outline-danger">Reject</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <!-- Add modal HTML just before </body> -->
+    <div class="modal fade" id="editRequirementModal" tabindex="-1" aria-labelledby="editRequirementModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="editRequirementModalLabel">Edit Requirement</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <form id="editRequirementForm">
+              <div class="mb-3">
+                <label for="editCustomerId" class="form-label">Customer Req. ID</label>
+                <input type="text" class="form-control" id="editCustomerId" readonly>
+              </div>
+              <div class="mb-3">
+                <label for="editCustomerRequirement" class="form-label">Customer Requirement</label>
+                <textarea class="form-control" id="editCustomerRequirement" rows="2"></textarea>
+              </div>
+              <div class="mb-3">
+                <label for="editSys1Id" class="form-label">SYS.1 Req. ID</label>
+                <input type="text" class="form-control" id="editSys1Id" readonly>
+              </div>
+              <div class="mb-3">
+                <label for="editSys1Requirement" class="form-label">SYS.1 System Requirement</label>
+                <textarea class="form-control" id="editSys1Requirement" rows="2"></textarea>
+              </div>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="button" class="btn btn-primary" id="saveRequirementBtn">Save</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Floating Help Button -->
+    <button class="btn btn-primary rounded-circle floating-help-button" data-bs-toggle="modal" data-bs-target="#helpModal">
+        ❓
+    </button>
+
+    <!-- Help Modal -->
+    <div class="modal fade" id="helpModal" tabindex="-1" aria-labelledby="helpModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="helpModalLabel">MAPS Assistant: What can I do here? (Agent 1)</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>On this page, the SYS.1 Elicitation Agent helps you extract and draft initial requirements from various sources.</p>
+                    <ul>
+                        <li><strong>Upload Requirements:</strong> Drag and drop or select files (TXT, DOCX, PDF, XLSX, CSV, PPT, EML, MSG) or paste raw text into the provided area.</li>
+                        <li><strong>Process Inputs:</strong> Click the button to analyze the uploaded files and text, and the agent will attempt to extract potential requirements.</li>
+                        <li><strong>Extracted Requirements Table:</strong> View the requirements drafted by the agent. You can review, edit, accept, or reject each requirement.</li>
+                        <li><strong>Export Options:</strong> Export the extracted requirements in various formats (DOCX, XLSX, CSV, PDF).</li>
+                        <li><strong>Traceability Dashboard:</strong> Navigate to the traceability dashboard to see the links between customer requirements and SYS.1 requirements.</li>
+                    </ul>
+                    <p>Use the table actions to refine the extracted requirements and update their status.</p>
+                     <hr>
+                    <p>Need more detailed information?</p>
+                    <p><a href="#" target="_blank">Link to Documentation (Placeholder)</a></p>
+                    <p><a href="#" target="_blank">Link to Glossary (Placeholder)</a></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- Toast Notification Container -->
+    <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11">
+        <div id="exportToastAgent1" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="toast-header">
+                <strong class="me-auto">Export Status</strong>
+                <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+            <div class="toast-body">
+                Export completed successfully!
+            </div>
+        </div>
+    </div>
+
+    <!-- Feedback Modal -->
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Pass initial requirements to JavaScript
+        let initialRequirements = []; // Declare the variable with a default empty array
+        try {
+            // Attempt to parse the JSON data passed from Flask
+            initialRequirements = {{ initial_requirements | tojson }};
+        } catch (e) {
+            console.error("Error parsing initial requirements from backend:", e);
+            // initialRequirements will remain an empty array
+        }
+
+        // Dark Mode Toggle Logic
+        const darkModeToggle = document.getElementById('darkModeToggle');
+        const body = document.body;
+
+        // Load saved preference
+        const savedMode = localStorage.getItem('darkMode');
+        if (savedMode) {
+            body.classList.toggle('dark-mode', savedMode === 'enabled');
+            if (savedMode === 'enabled') {
+                darkModeToggle.checked = true;
+            }
+        }
+
+        darkModeToggle.addEventListener('change', function() {
+            if (this.checked) {
+                body.classList.add('dark-mode');
+                localStorage.setItem('darkMode', 'enabled');
+            } else {
+                body.classList.remove('dark-mode');
+                localStorage.setItem('darkMode', 'disabled');
+            }
+        });
+
+        // File upload handling
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+        const processingStatus = document.getElementById('processingStatus');
+        const statusMessage = document.getElementById('statusMessage');
+        const uploadBtn = document.getElementById('uploadBtn');
+        const rawContent = document.getElementById('rawContent');
+
+        dropZone.addEventListener('click', () => fileInput.click());
+        
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.style.borderColor = '#0d6efd';
+        });
+
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.style.borderColor = '#ccc';
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            updateFileList();
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.style.borderColor = '#ccc';
+            const files = e.dataTransfer.files;
+            fileInput.files = files;
+            updateFileList();
+        });
+
+        function updateFileList() {
+            const fileListDiv = document.getElementById('uploadedFilesList');
+            const files = fileInput.files;
+            if (files.length === 0) {
+                fileListDiv.innerHTML = '';
+                return;
+            }
+            let html = '<strong>Selected files:</strong><ul class="mb-0">';
+            for (let i = 0; i < files.length; i++) {
+                html += `<li>${files[i].name}</li>`;
+            }
+            html += '</ul>';
+            fileListDiv.innerHTML = html;
+        }
+
+        uploadBtn.addEventListener('click', () => {
+            processingStatus.classList.remove('d-none');
+            statusMessage.textContent = 'Processing files and content...';
+            // Show the progress bar
+            document.getElementById('processingProgressBar').classList.remove('d-none');
+
+            const formData = new FormData();
+            for (let file of fileInput.files) {
+                formData.append('file', file);
+            }
+            if (rawContent.value.trim()) {
+                formData.append('raw_content', rawContent.value.trim());
+            }
+
+            fetch('/api/upload', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    statusMessage.textContent = 'Inputs processed successfully!';
+                    // Display requirements from the response
+                    displayRequirements(data.requirements);
+                } else {
+                    statusMessage.textContent = 'Error processing inputs: ' + data.message;
+                }
+            })
+            .catch(error => {
+                statusMessage.textContent = 'Error: ' + error.message;
+            })
+            .finally(() => {
+                setTimeout(() => {
+                    processingStatus.classList.add('d-none');
+                    // Hide the progress bar
+                    document.getElementById('processingProgressBar').classList.add('d-none');
+                }, 3000); // Hide after 3 seconds
+            });
+        });
+
+        function displayRequirements(requirements) {
+            const tableBody = document.querySelector('#requirementsTable tbody');
+            tableBody.innerHTML = '';
+            requirements.forEach(req => {
+                const row = document.createElement('tr');
+                // Determine row class based on status
+                let rowClass = '';
+                if (req.req_status === 'Approved') { // Use req.req_status for coloring
+                    rowClass = 'table-success';
+                } else if (req.req_status === 'Rejected') { // Use req.req_status for coloring
+                    rowClass = 'table-danger';
+                } else {
+                    rowClass = '';
+                }
+                row.className = rowClass.trim();
+
+                row.innerHTML = `
+                    <td>${req.customer_id || ''}</td>
+                    <td>${req.customer_requirement || ''}</td>
+                    <td>${req.sys1_id || ''}</td>
+                    <td>${req.sys1_requirement || ''}</td>
+                    <td>${req.domain || ''}</td>
+                    <td>${req.priority || ''}</td>
+                    <td>${req.rationale || ''}</td>
+                    <td>${req.req_status || 'Draft'}</td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-primary edit-btn" data-req-id="${req.customer_id}">Edit</button>
+                        <button class="btn btn-sm btn-outline-success accept-btn" data-req-id="${req.sys1_id}">Accept</button>
+                        <button class="btn btn-sm btn-outline-danger reject-btn" data-req-id="${req.sys1_id}">Reject</button>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        function exportRequirements(format) {
+            fetch(`/api/agent1/export/${format}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Export failed');
+                    }
+                    return response.blob();
+                })
+                .then(blob => {
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.style.display = 'none'; // Hide the link
+                    a.href = url;
+                    a.download = `elicitation_requirements.${format}`;
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                    document.body.removeChild(a); // Clean up the element
+
+                    // Show success toast
+                    const toastEl = document.getElementById('exportToastAgent1');
+                    const toast = new bootstrap.Toast(toastEl, {
+                         delay: 3000 // Show for 3 seconds
+                    });
+                    toastEl.querySelector('.toast-body').textContent = 'Export completed successfully!';
+                    toastEl.classList.remove('bg-danger'); // Ensure no error styling
+                    toastEl.classList.add('bg-success'); // Add success styling
+                    toast.show();
+                })
+                .catch(error => {
+                    console.error('Error exporting:', error);
+
+                    // Show error toast
+                    const toastEl = document.getElementById('exportToastAgent1');
+                     const toast = new bootstrap.Toast(toastEl, {
+                         delay: 3000 // Show for 3 seconds
+                     });
+                    toastEl.querySelector('.toast-body').textContent = 'Export failed: ' + error.message;
+                    toastEl.classList.remove('bg-success'); // Ensure no success styling
+                    toastEl.classList.add('bg-danger'); // Add error styling
+                    toast.show();
+                });
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Load initial requirements if they exist (passed from Flask backend)
+            if (initialRequirements && initialRequirements.length > 0) {
+                displayRequirements(initialRequirements);
+            }
+
+            // Delegate event handling for dynamically created buttons
+            document.getElementById('requirementsTable').addEventListener('click', function(e) {
+                if (e.target.classList.contains('edit-btn')) {
+                    const row = e.target.closest('tr');
+                    document.getElementById('editCustomerId').value = row.children[0].textContent;
+                    document.getElementById('editCustomerRequirement').value = row.children[1].textContent;
+                    document.getElementById('editSys1Id').value = row.children[2].textContent;
+                    document.getElementById('editSys1Requirement').value = row.children[3].textContent;
+                    var editModal = new bootstrap.Modal(document.getElementById('editRequirementModal'));
+                    editModal.show();
+                }
+                if (e.target.classList.contains('accept-btn')) {
+                    const row = e.target.closest('tr');
+                    const reqId = e.target.getAttribute('data-req-id');
+                    const statusCell = row.children[7]; // Get the Requirement Status cell (index 7)
+                    updateRequirementStatus(reqId, 'Approved');
+                }
+                if (e.target.classList.contains('reject-btn')) {
+                    const row = e.target.closest('tr');
+                    const reqId = e.target.getAttribute('data-req-id');
+                    const statusCell = row.children[7]; // Get the Requirement Status cell (index 7)
+                    updateRequirementStatus(reqId, 'Rejected');
+                }
+            });
+
+            // Save button in modal
+            document.getElementById('saveRequirementBtn').addEventListener('click', function() {
+                const customerId = document.getElementById('editCustomerId').value;
+                const customerRequirement = document.getElementById('editCustomerRequirement').value;
+                const sys1Id = document.getElementById('editSys1Id').value;
+                const sys1Requirement = document.getElementById('editSys1Requirement').value;
+                // Find the row in the table and update it (client-side update for responsiveness)
+                const tableRows = document.querySelectorAll('#requirementsTable tbody tr');
+                tableRows.forEach(row => {
+                    // Use sys1Id to find the row, as it's unique per SYS.1 requirement
+                    if (row.children[2].textContent === sys1Id) {
+                        row.children[1].textContent = customerRequirement; // Update Customer Requirement cell
+                        row.children[3].textContent = sys1Requirement; // Update SYS.1 System Requirement cell
+                         // TODO: Update other cells if they become editable
+                    }
+                });
+
+                // Send updated requirement to backend
+                fetch('/api/agent1/update_requirement', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        sys1_id: sys1Id,
+                        customer_requirement: customerRequirement,
+                        sys1_requirement: sys1Requirement
+                        // Include other editable fields here
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        console.log('Requirement updated successfully in backend:', data.message);
+                    } else {
+                        console.error('Error updating requirement in backend:', data.message);
+                        // Optionally revert client-side changes or show an error to the user
+                    }
+                })
+                .catch(error => {
+                    console.error('Error sending update request:', error);
+                    // Handle network errors
+                });
+
+                // Close modal
+                var editModal = bootstrap.Modal.getInstance(document.getElementById('editRequirementModal'));
+                editModal.hide();
+            });
+
+            function updateRequirementStatus(reqId, status) {
+                fetch('/api/agent1/update_status', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ id: reqId, new_req_status: status }), // Send new_req_status
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        console.log(data.message); // Log success message
+                         // Find the row and update its status and color on success
+                        const row = document.querySelector(`#requirementsTable tbody tr button[data-req-id="${reqId}"]`).closest('tr');
+                        const statusCell = row.children[7];
+                        statusCell.textContent = status; // Update text
+                        // Update row color
+                        row.classList.remove('table-success', 'table-danger');
+                        if (status === 'Approved') {
+                            row.classList.add('table-success');
+                        } else if (status === 'Rejected') {
+                            row.classList.add('table-danger');
+                        }
+                    } else {
+                        console.error('Error updating status:', data.message);
+                    }
+                })
+                .catch((error) => {
+                    console.error('Error:', error);
+                });
+            }
+        });
+    </script>
+</body>
+</html>
+{% endblock %} 
