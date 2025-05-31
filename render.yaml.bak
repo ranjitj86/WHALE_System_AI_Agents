@@ -3,7 +3,7 @@ services:
     name: whale-requirements-engineering
     env: python
     buildCommand: pip install -r requirements.txt
-    startCommand: cd AutoTestGen_MAPS && python app.py
+    startCommand: python AutoTestGen_MAPS/app.py
     envVars:
       - key: SECRET_KEY
         generateValue: true 
