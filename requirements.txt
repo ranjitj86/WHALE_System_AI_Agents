@@ -7,4 +7,5 @@ python-pptx
 extract_msg
 python-docx
 PyPDF2
-xlsxwriter 
+xlsxwriter
+gunicorn 
