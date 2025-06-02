@@ -3,7 +3,7 @@ services:
     name: whale-requirements-engineering
     env: python
     buildCommand: pip install -r requirements.txt
-    startCommand: PYTHONPATH=AutoTestGen_MAPS gunicorn app:app --chdir AutoTestGen_MAPS
+    startCommand: PYTHONPATH=AutoTestGen_MAPS gunicorn app:app --chdir AutoTestGen_MAPS -w 4 -b 0.0.0.0:10000
     envVars:
       - key: SECRET_KEY
-        generateValue: true 
+        generateValue: true
